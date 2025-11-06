@@ -1,4 +1,5 @@
 package pago.servicio;
 
-public class PagoEfectivo {
+public interface PagoEfectivo {
+    float pagar(float monto);
 }

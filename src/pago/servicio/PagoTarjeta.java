@@ -1,4 +1,5 @@
 package pago.servicio;
 
-public class PagoTarjeta {
+public interface PagoTarjeta {
+    void pagar(Object tarjeta);
 }
