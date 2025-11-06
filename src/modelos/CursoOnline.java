@@ -1,14 +1,14 @@
-package core;
+package modelos;
 
 public class CursoOnline extends Curso {
 
     private String linkPlataforma;
     private String plataforma;
 
-    public CursoOnline(int idCurso, String nombre, String descripcion, int cupo,
+    public CursoOnline( String nombre, String descripcion, int cupo,
                        String linkPlataforma, String plataforma) {
         // Llamada al constructor de la clase padre (core.Curso)
-        super(idCurso, nombre, descripcion, cupo);
+        super( nombre, descripcion, cupo);
         this.linkPlataforma = linkPlataforma;
         this.plataforma = plataforma;
     }

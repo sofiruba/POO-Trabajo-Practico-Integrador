@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Pago {
 
-    private String idPago;
+    private int idPago;
     private Date fecha;
     private float total;
     private String tipo;
@@ -15,9 +15,11 @@ public class Pago {
 
     // Relación de Dependencia/Agregación: Pago --> Recibo : genera >
     private Recibo recibo;
+    private int contador = 0;
 
-    public Pago(String idPago, Date fecha, float total, String tipo, int cantidadCuotas) {
-        this.idPago = idPago;
+    public Pago( Date fecha, float total, String tipo, int cantidadCuotas) {
+        contador ++;
+        this.idPago = contador;
         this.fecha = fecha;
         this.total = total;
         this.tipo = tipo;
@@ -36,7 +38,7 @@ public class Pago {
         this.cuotas.add(cuota);
     }
 
-    public String getIdPago() { return idPago; }
+    public int getIdPago() { return idPago; }
     public Recibo getRecibo() { return recibo; }
 
 }

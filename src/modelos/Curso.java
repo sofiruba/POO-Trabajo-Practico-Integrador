@@ -1,8 +1,8 @@
-package core;
+package modelos;
 
 import java.time.LocalDate;
 
-public abstract class Curso {
+public abstract class Curso implements Comparable<Curso>{
 
     private int idCurso;
     private String nombre;
@@ -16,8 +16,10 @@ public abstract class Curso {
     public static final String ESTADO_PUBLICADO = "publicado";
     public static final String ESTADO_CERRADO = "cerrado";
 
-    public Curso(int idCurso, String nombre, String descripcion, int cupo) {
-        this.idCurso = idCurso;
+    private static int contador = 0;
+    public Curso( String nombre, String descripcion, int cupo) {
+        contador++;
+        this.idCurso = contador;
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.cupo = cupo;
@@ -75,5 +77,10 @@ public abstract class Curso {
         return estado;
     }
 
+    @Override
+    public int compareTo(Curso otroCurso) {
+        // Usamos String.compareTo para comparar alfabéticamente los nombres
+        return this.nombre.compareTo(otroCurso.getNombre());
+    }
 
 }

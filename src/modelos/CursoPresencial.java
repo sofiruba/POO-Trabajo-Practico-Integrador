@@ -1,13 +1,13 @@
-package core;
+package modelos;
 
 public class CursoPresencial extends Curso {
 
     private String aula;
     private String direccion;
 
-    public CursoPresencial(int idCurso, String nombre, String descripcion, int cupo,
+    public CursoPresencial(String nombre, String descripcion, int cupo,
                            String aula, String direccion) {
-        super(idCurso, nombre, descripcion, cupo);
+        super( nombre, descripcion, cupo);
         this.aula = aula;
         this.direccion = direccion;
     }

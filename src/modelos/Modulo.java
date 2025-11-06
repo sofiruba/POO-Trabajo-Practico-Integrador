@@ -1,4 +1,4 @@
-package core;
+package modelos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +11,10 @@ public class Modulo {
 
     private List<Evaluacion> evaluaciones; // Colección de Evaluaciones
 
+    private int contador = 0;
     public Modulo(int idModulo, String titulo, String contenido) {
-        this.idModulo = idModulo;
+        contador++;
+        this.idModulo = contador;
         this.titulo = titulo;
         this.contenido = contenido;
         this.evaluaciones = new ArrayList<>(); // Inicializamos la colección

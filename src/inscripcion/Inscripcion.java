@@ -1,9 +1,10 @@
 package inscripcion;
 
 import java.util.*;
-import user.Alumno;
-import core.Curso;
+
+import modelos.Curso;
 import pago.Pago;
+import user.Alumno;
 
 public class Inscripcion {
 
@@ -21,8 +22,10 @@ public class Inscripcion {
     // Relación de Agregación: Inscripcion "1" -- "0..*" Pago : genera >
     private List<Pago> pagos;
 
-    public Inscripcion(int idInscripcion, Date fecha, Alumno alumno, Curso curso) {
-        this.idInscripcion = idInscripcion;
+    private int contador = 0;
+    public Inscripcion( Date fecha, Alumno alumno, Curso curso) {
+        contador++;
+        this.idInscripcion = contador;
         this.fecha = fecha;
         this.alumno = alumno;
         this.curso = curso;

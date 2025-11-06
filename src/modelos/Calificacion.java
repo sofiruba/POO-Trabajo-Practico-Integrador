@@ -1,4 +1,4 @@
-package core;
+package modelos;
 
 import java.util.Date;
 
@@ -9,8 +9,10 @@ public class Calificacion {
     private String comentario;
     private Date fechaRegistro;
 
-    public Calificacion(int idCalif, float nota, String comentario, Date fechaRegistro) {
-        this.idCalif = idCalif;
+    private int contador = 0;
+    public Calificacion( float nota, String comentario, Date fechaRegistro) {
+        contador++;
+        this.idCalif = contador;
         this.nota = nota;
         this.comentario = comentario;
         this.fechaRegistro = fechaRegistro;
