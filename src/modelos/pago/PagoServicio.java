@@ -1,8 +1,6 @@
-package pago.servicio;
+package modelos.pago;
 
-import inscripcion.Inscripcion;
-import pago.Recibo;
-
+import modelos.inscripcion.Inscripcion;
 
 public interface PagoServicio {
     Recibo pagar(Inscripcion inscripcion, float monto, String tipo, int cuotas);

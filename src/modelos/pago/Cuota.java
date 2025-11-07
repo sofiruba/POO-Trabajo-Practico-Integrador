@@ -1,10 +1,7 @@
-package pago;
+package modelos.pago;
 
 import java.util.Date;
 
-/**
- * Representa un pago parcial que compone un Pago a cuotas.
- */
 public class Cuota {
 
     private int nro;

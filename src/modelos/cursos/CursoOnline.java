@@ -1,4 +1,4 @@
-package modelos;
+package modelos.cursos;
 
 public class CursoOnline extends Curso {
 

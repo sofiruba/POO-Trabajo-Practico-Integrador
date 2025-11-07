@@ -1,4 +1,4 @@
-package pago;
+package modelos.pago;
 
 import java.util.*;
 

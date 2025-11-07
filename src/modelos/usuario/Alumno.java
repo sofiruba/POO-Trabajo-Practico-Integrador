@@ -1,5 +1,8 @@
-package user;
-import modelos.*;
+package modelos.usuario;
+
+import modelos.cursos.Curso;
+import modelos.cursos.Evaluacion;
+import modelos.cursos.Modulo;
 
 import java.util.ArrayList;
 import java.util.Date;

@@ -1,8 +1,5 @@
-package pago;
+package modelos.pago;
 
-/**
- * Documento que certifica la realización de un Pago.
- */
 public class Recibo {
 
     private String nro;

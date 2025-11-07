@@ -1,6 +1,7 @@
-package modelos;
+package modelos.cursos;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 public abstract class Curso implements Comparable<Curso>{
 
@@ -9,8 +10,8 @@ public abstract class Curso implements Comparable<Curso>{
     private String descripcion;
     private int cupo;
     private String estado;
-    private LocalDate fechaInicio;
-    private LocalDate fechaFin;
+    private Date fechaInicio;
+    private Date fechaFin;
 
     public static final String ESTADO_BORRADOR = "borrador";
     public static final String ESTADO_PUBLICADO = "publicado";
@@ -81,6 +82,14 @@ public abstract class Curso implements Comparable<Curso>{
     public int compareTo(Curso otroCurso) {
         // Usamos String.compareTo para comparar alfabéticamente los nombres
         return this.nombre.compareTo(otroCurso.getNombre());
+    }
+
+    public Date getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public Date getFechaFin() {
+        return fechaFin;
     }
 
 }

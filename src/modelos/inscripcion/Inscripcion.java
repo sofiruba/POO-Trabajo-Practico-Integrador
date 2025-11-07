@@ -1,10 +1,10 @@
-package inscripcion;
+package modelos.inscripcion;
+
+import modelos.cursos.Curso;
+import modelos.pago.Pago;
+import modelos.usuario.Alumno;
 
 import java.util.*;
-
-import modelos.Curso;
-import pago.Pago;
-import user.Alumno;
 
 public class Inscripcion {
 

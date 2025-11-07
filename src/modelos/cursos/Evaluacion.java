@@ -1,10 +1,7 @@
-package modelos;
+package modelos.cursos;
 
-import java.util.Date; // Usaremos java.util.Date según tu diagrama original, aunque LocalDate es mejor
+import java.util.Date;
 
-/**
- * Representa una prueba o tarea que debe ser calificada.
- */
 public class Evaluacion {
 
     private int idEval;

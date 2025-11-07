@@ -1,4 +1,4 @@
-package user;
+package modelos.usuario;
 import java.awt.image.BufferedImage;
 
 public abstract class Usuario {

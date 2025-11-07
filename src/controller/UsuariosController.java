@@ -1,80 +1,68 @@
 package controller;
 
+import data.GestorBDDUsuario;
+import modelos.usuario.Alumno;
+import modelos.usuario.Docente;
+import modelos.usuario.Usuario;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import user.Alumno;
-import user.Docente;
-import user.Usuario;
-import data.interfaces.ContratoDeUsuario;
-import data.implementaciones.*; // Asumimos un DAO/Gestor para Usuarios
 
 public class UsuariosController {
 
-    // Atributos (Colecciones en Memoria)
-    private List<Alumno> alumnos;
-    private List<Docente> docentes;
-    private final ContratoDeUsuario gestorUsuarios;
+    private final List<Alumno> alumnos;
+    private final List<Docente> docentes;
+    private final GestorBDDUsuario gestor;
 
-    // Dependencia (Abstracción a Persistencia)
-    // Se usa un Gestor de Datos para Alumnos y otro para Docentes
-    //private IGestorDeDatos<Alumno, Integer> gestorAlumnos;
-   // private IGestorDeDatos<Docente, Integer> gestorDocentes;
-
-    public UsuariosController() {
-        this.gestorUsuarios = new GestorDeUsuarioSQL();
-        // Inicialización de los gestores
-        // NOTA: Usaremos un gestor simplificado que maneja ambos, o dos archivos separados.
-        // Aquí asumimos que ArchivoDeUsuarios carga y guarda una lista de todos los Usuarios,
-        // y los separamos en Alumnos y Docentes. Para simplicidad, inicializaremos las listas.
-
-        // **En un TPI real, cargarías los datos aquí usando los DAOs correspondientes**
+    public UsuariosController(GestorBDDUsuario gestor) {
+        this.gestor = gestor;
         this.alumnos = new ArrayList<>();
         this.docentes = new ArrayList<>();
 
-        // Ejemplo de inicialización con DAO (asumiendo que lo implementarás)
-        // this.gestorAlumnos = new ArchivoDeUsuarios<Alumno, Integer>("alumnos.json");
-        // this.gestorDocentes = new ArchivoDeUsuarios<Docente, Integer>("docentes.json");
-
-        // Por ahora, inicializamos las colecciones en memoria
-        this.alumnos = new ArrayList<>();
-        this.docentes = new ArrayList<>();
+        // Al iniciar, cargamos los usuarios desde la base
+        this.alumnos.addAll(gestor.buscarTodosAlumnos());
+        this.docentes.addAll(gestor.buscarTodosDocentes());
     }
 
-
-    public Alumno registrarAlumno(String nombre, String email, String contrasena) {
-        Alumno nuevoAlumno = new Alumno(nombre, email, contrasena, new Date());
-        this.alumnos.add(nuevoAlumno);
-        System.out.println("Controladora Usuarios: Alumno " + nombre + " registrado.");
-        return nuevoAlumno;
+    public void registrarAlumno(Alumno alumno) {
+        gestor.guardarAlumno(alumno);
+        alumnos.add(alumno);
+        System.out.println("Alumno registrado: " + alumno.getNombre());
     }
 
-    public Docente registrarDocente(String nombre, String email, String contrasena, String especialidad) {
-        Docente nuevoDocente = new Docente(nombre, email, contrasena, especialidad);
-
-        this.docentes.add(nuevoDocente);
-        // Lógica de Persistencia: this.gestorDocentes.guardar(nuevoDocente);
-
-        System.out.println("Controladora Usuarios: Docente " + nombre + " registrado.");
-        return nuevoDocente;
+    public void registrarDocente(Docente docente) {
+        gestor.guardarDocente(docente);
+        docentes.add(docente);
+        System.out.println("Docente registrado: " + docente.getNombre());
     }
 
+    public Usuario login(String email, String contrasenia) {
+        Usuario usuario = gestor.buscarPorEmail(email);
 
-    public boolean login(String email, String contrasena) {
+        if (usuario != null && usuario.getContrasenia().equals(contrasenia)) {
+            usuario.login();
+            return usuario;
+        } else {
+            System.out.println("Credenciales incorrectas.");
+            return null;
+        }
+    }
 
-        Usuario user = alumnos.stream()
-                .filter(a -> a.getEmail().equals(email) && a.getContrasenia().equals(contrasena))
-                .findFirst()
-                .orElse(null);
+    public void logout(Usuario usuario) {
+        if (usuario != null) {
+            usuario.logout();
+        }
+    }
 
-        if (user != null) return false;
-
-        user = docentes.stream()
-                .filter(d -> d.getEmail().equals(email) && d.getContrasenia().equals(contrasena))
-                .findFirst()
-                .orElse(null);
-
-        return this.gestorUsuarios.buscarPorNombreYClave(email, contrasena);
+    public Usuario buscarPorEmail(String email) {
+        // Primero busca en memoria, luego en la base si no lo encuentra
+        for (Alumno a : alumnos) {
+            if (a.getEmail().equalsIgnoreCase(email)) return a;
+        }
+        for (Docente d : docentes) {
+            if (d.getEmail().equalsIgnoreCase(email)) return d;
+        }
+        return gestor.buscarPorEmail(email);
     }
 
     public List<Alumno> getAlumnos() {
