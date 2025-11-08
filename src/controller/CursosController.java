@@ -5,6 +5,7 @@ import data.GestorBDDCurso;
 import modelos.cursos.Curso;
 import modelos.cursos.CursoOnline;
 import modelos.cursos.CursoPresencial;
+import modelos.cursos.Modulo;
 import modelos.inscripcion.Inscripcion;
 import modelos.pago.PagoServicio;
 import modelos.pago.Recibo;
@@ -25,9 +26,9 @@ public class CursosController {
     // Autoincremento local para inscripciones (si no lo maneja la clase Inscripcion)
     private static int CONTADOR_INSCRIPCIONES = 0;
 
-    public CursosController(PagoServicio pagoServicio, GestorBDDCurso gestorCurso) {
+    public CursosController(PagoServicio pagoServicio) {
         this.pagoServicio = pagoServicio;
-        this.gestorCurso = gestorCurso;
+        this.gestorCurso = new GestorBDDCurso();
 
         this.alumnos = new ArrayList<>();
         this.docentes = new ArrayList<>();
@@ -146,4 +147,9 @@ public class CursosController {
     public List<Inscripcion> getInscripciones() {
         return inscripciones;
     }
+    public Modulo buscarModuloPorIdEval(Curso curso, int idEval) {
+        if (curso == null) return null;
+        return curso.buscarModuloPorIdEval(idEval);
+    }
+
 }

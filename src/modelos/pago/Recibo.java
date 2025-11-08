@@ -2,11 +2,11 @@ package modelos.pago;
 
 public class Recibo {
 
-    private String nro;
+    private int nro;
     private String detalle;
     private float total;
 
-    public Recibo(String nro, String detalle, float total) {
+    public Recibo(int nro, String detalle, float total) {
         this.nro = nro;
         this.detalle = detalle;
         this.total = total;
@@ -19,6 +19,9 @@ public class Recibo {
         System.out.println("-------------------------");
     }
 
-    public String getNro() { return nro; }
+    public int getNro() { return nro; }
 
+    public String getMonto() {
+        return String.format("%.2f", total);
+    }
 }

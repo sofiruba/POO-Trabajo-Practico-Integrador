@@ -29,7 +29,7 @@ public class Pago {
 
     public Recibo generarRecibo(String detalle) {
         // En un modelo de composición, el Pago es responsable de crear el Recibo.
-        this.recibo = new Recibo("REC-" + idPago, detalle, this.total);
+        this.recibo = new Recibo( idPago, detalle, this.total);
         System.out.println("Recibo " + recibo.getNro() + " generado para el Pago " + idPago);
         return this.recibo;
     }

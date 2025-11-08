@@ -1,7 +1,7 @@
 package modelos.cursos;
 
 import java.time.LocalDate;
-import java.util.Date;
+import java.util.*;
 
 public abstract class Curso implements Comparable<Curso>{
 
@@ -12,6 +12,7 @@ public abstract class Curso implements Comparable<Curso>{
     private String estado;
     private Date fechaInicio;
     private Date fechaFin;
+    private List<Modulo> modulos = new ArrayList<>();
 
     public static final String ESTADO_BORRADOR = "borrador";
     public static final String ESTADO_PUBLICADO = "publicado";
@@ -90,6 +91,32 @@ public abstract class Curso implements Comparable<Curso>{
 
     public Date getFechaFin() {
         return fechaFin;
+    }
+    public void agregarModulo(Modulo modulo) {
+        modulos.add(modulo);
+    }
+
+    // Buscar módulo por ID
+    public Modulo buscarModuloPorId(int idModulo) {
+        for (Modulo m : modulos) {
+            if (m.getIdModulo() == idModulo) return m;
+        }
+        return null;
+    }
+    public Modulo buscarModuloPorIdEval(int idEval) {
+        for (Modulo m : modulos) {
+            if (m.buscarEvaluacionPorId(idEval) != null) {
+                return m;
+            }
+        }
+        return null;
+    }
+
+    public List<Modulo> getModulos() { return modulos; }
+
+    @Override
+    public String toString() {
+        return "Curso{" + nombre + ", id=" + idCurso + "}";
     }
 
 }

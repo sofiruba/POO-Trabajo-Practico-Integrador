@@ -12,7 +12,7 @@ public class Modulo {
     private List<Evaluacion> evaluaciones; // Colección de Evaluaciones
 
     private int contador = 0;
-    public Modulo(int idModulo, String titulo, String contenido) {
+    public Modulo(String titulo, String contenido) {
         contador++;
         this.idModulo = contador;
         this.titulo = titulo;
@@ -25,10 +25,21 @@ public class Modulo {
     }
 
 
+    public Evaluacion buscarEvaluacionPorId(int idEval) {
+        for (Evaluacion e : evaluaciones) {
+            if (e.getIdEval() == idEval) return e;
+        }
+        return null;
+    }
+
     public int getIdModulo() { return idModulo; }
     public String getTitulo() { return titulo; }
     public String getContenido() { return contenido; }
     public List<Evaluacion> getEvaluaciones() { return evaluaciones; }
+    @Override
+    public String toString() {
+        return "Modulo{" + titulo + ", id=" + idModulo + "}";
+    }
 
 
 }

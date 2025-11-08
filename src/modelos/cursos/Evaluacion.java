@@ -9,7 +9,7 @@ public class Evaluacion {
     private Date fecha; // Usando Date
     private float puntajeMaximo;
 
-    private int contador = 0;
+    private static int contador = 0;
 
     public static final String TIPO_FINAL = "final";
     public static final String TIPO_TP = "tp";

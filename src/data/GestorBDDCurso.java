@@ -100,9 +100,10 @@ public class GestorBDDCurso {
         return lista;
     }
 
-    public int buscarTodos() {
+    public ArrayList<Curso> buscarTodos() {
         // todo
-        return -1;
+        System.out.println("⚠ Simulación: no se cargaron cursos desde la BDD.");
+        return new ArrayList<>();
     }
 
     public void guardar(Curso nuevoCurso) {
