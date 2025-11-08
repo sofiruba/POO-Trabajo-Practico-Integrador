@@ -2,6 +2,7 @@ package controller;
 
 import java.util.*;
 import data.GestorBDDCurso;
+import data.GestorBDDInscripcion;
 import modelos.cursos.Curso;
 import modelos.cursos.CursoOnline;
 import modelos.cursos.CursoPresencial;
@@ -22,13 +23,14 @@ public class CursosController {
 
     private final PagoServicio pagoServicio;
     private final GestorBDDCurso gestorCurso;
+    private final GestorBDDInscripcion gestorInscripciones;
+    private UsuariosController usuariosController;
 
-    // Autoincremento local para inscripciones (si no lo maneja la clase Inscripcion)
-    private static int CONTADOR_INSCRIPCIONES = 0;
-
-    public CursosController(PagoServicio pagoServicio) {
+    public CursosController(PagoServicio pagoServicio, UsuariosController usuariosController) {
         this.pagoServicio = pagoServicio;
+        this.usuariosController = usuariosController;
         this.gestorCurso = new GestorBDDCurso();
+        this.gestorInscripciones = new GestorBDDInscripcion();
 
         this.alumnos = new ArrayList<>();
         this.docentes = new ArrayList<>();
@@ -40,20 +42,18 @@ public class CursosController {
         System.out.println("✅ Controladora inicializada. Se cargaron " + cursos.size() + " cursos desde la base.");
     }
 
-    /**
-     * Crea un curso y lo persiste en la base de datos.
-     */
+    // --- CREAR CURSO ---
     public Curso crearCurso(Docente docente, String nombre, String desc, int cupo, String modalidad) {
         Curso nuevoCurso = null;
 
         switch (modalidad.toUpperCase()) {
             case "ONLINE" -> {
                 nuevoCurso = new CursoOnline(nombre, desc, cupo, "https://plataforma-temp.com", "Zoom");
-                gestorCurso.guardar(nuevoCurso);
+                gestorCurso.guardar(nuevoCurso, docente);
             }
             case "PRESENCIAL" -> {
                 nuevoCurso = new CursoPresencial(nombre, desc, cupo, "Aula 101", "Av. Siempre Viva 123");
-                gestorCurso.guardar(nuevoCurso);
+                gestorCurso.guardar(nuevoCurso, docente);
             }
             default -> {
                 System.err.println("⚠️ Modalidad inválida. Usa 'ONLINE' o 'PRESENCIAL'.");
@@ -66,9 +66,7 @@ public class CursosController {
         return nuevoCurso;
     }
 
-    /**
-     * Inicia un curso (solo para docentes).
-     */
+    // --- INICIAR CURSO ---
     public void iniciarCurso(Curso curso, Docente docente) {
         if (!docentes.contains(docente)) {
             System.out.println("⚠️ El docente no pertenece a la plataforma.");
@@ -79,77 +77,69 @@ public class CursosController {
         curso.iniciar();
     }
 
-    /**
-     * Inscribe a un alumno en un curso.
-     */
+    // --- INSCRIPCIONES ---
     public Inscripcion inscribirAlumno(Alumno alumno, Curso curso) throws CupoCompletoException {
-        // Validar cupos (comentado si aún no usás el enum EstadoInscripcion)
-        /*
-        long inscritos = this.inscripciones.stream()
-                .filter(i -> i.getCurso().equals(curso)
-                        && (i.getEstado().equals(EstadoInscripcion.PENDIENTE)
-                        || i.getEstado().equals(EstadoInscripcion.ACEPTADA)))
-                .count();
+        Inscripcion nuevaInscripcion = new Inscripcion(alumno, curso);
+        inscripciones.add(nuevaInscripcion);
 
-        if (curso.getCupo() <= inscritos) {
-            throw new CupoCompletoException(curso.getNombre());
-        }
-        */
-
-        Inscripcion inscripcion = new Inscripcion(new Date(), alumno, curso);
-        inscripciones.add(inscripcion);
+        // 🔹 Guardar en BDD
+        gestorInscripciones.guardar(nuevaInscripcion);
 
         System.out.println("📝 Alumno " + alumno.getNombre() + " preinscripto en " + curso.getNombre());
-        return inscripcion;
+        return nuevaInscripcion;
+    }
+    public Alumno crearAlumnoEnPlataforma(String nombre, String email, String contrasenia) {
+        // Delegamos la creación al UsuariosController
+        Alumno nuevoAlumno = new Alumno(nombre, email, contrasenia, new Date());
+        usuariosController.registrarAlumno(nuevoAlumno);
+
+        // Lo agregamos a la lista local si queremos tenerlo sincronizado
+        if (nuevoAlumno != null) {
+            alumnos.add(nuevoAlumno);
+            System.out.println("✅ Alumno agregado a la plataforma desde CursosController: " + nombre);
+        }
+
+        return nuevoAlumno;
     }
 
-    /**
-     * Inscribe al alumno y procesa el pago asociado.
-     */
     public Recibo inscribirYPagar(Alumno alumno, Curso curso, float monto, String tipoPago, int cuotas)
             throws CupoCompletoException {
 
         Inscripcion inscripcion = inscribirAlumno(alumno, curso);
-
         Recibo recibo = pagoServicio.pagar(inscripcion, monto, tipoPago, cuotas);
 
         if (recibo != null) {
             inscripcion.aceptar();
-            System.out.println("💳 Inscripción confirmada y pago procesado con éxito.");
-        } else {
-            System.out.println("⚠️ Fallo al procesar el pago. Inscripción pendiente.");
+            // 🔹 Actualizar en la BDD
+            gestorInscripciones.actualizarEstado(
+                    alumno.getId(),
+                    curso.getIdCurso(), // 👈 corregido
+                    Inscripcion.ESTADO_ACEPTADA
+
+            );
+            float montoNew = Float.parseFloat(recibo.getMonto().replace(",", ".")); // si viene con coma
+            System.out.printf("💳 Pago realizado por %s | Monto: %.2f\n", alumno.getNombre(), montoNew);
+
         }
 
         return recibo;
     }
 
-    /**
-     * Devuelve los cursos ordenados alfabéticamente.
-     */
+    // --- CONSULTAS ---
     public List<Curso> obtenerCursosOrdenadosPorNombre() {
         List<Curso> listaOrdenada = new ArrayList<>(cursos);
         Collections.sort(listaOrdenada);
         return listaOrdenada;
     }
 
-    public List<Alumno> getAlumnos() {
-        return alumnos;
-    }
-
-    public List<Docente> getDocentes() {
-        return docentes;
-    }
-
-    public List<Curso> getCursos() {
-        return cursos;
-    }
-
-    public List<Inscripcion> getInscripciones() {
-        return inscripciones;
-    }
     public Modulo buscarModuloPorIdEval(Curso curso, int idEval) {
         if (curso == null) return null;
         return curso.buscarModuloPorIdEval(idEval);
     }
 
+    // --- GETTERS ---
+    public List<Alumno> getAlumnos() { return alumnos; }
+    public List<Docente> getDocentes() { return docentes; }
+    public List<Curso> getCursos() { return cursos; }
+    public List<Inscripcion> getInscripciones() { return inscripciones; }
 }

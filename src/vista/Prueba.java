@@ -1,52 +1,46 @@
 import controller.CursosController;
-import modelos.cursos.Curso;
-import modelos.cursos.Modulo;
-import modelos.cursos.Evaluacion;
+import controller.UsuariosController;
+import modelos.pago.PagoServicio;
+import modelos.pago.*;
+import modelos.pago.Recibo;
 import modelos.usuario.Alumno;
 import modelos.usuario.Docente;
-import modelos.pago.PagoServicio;
-import modelos.pago.Recibo;
+import modelos.cursos.Curso;
+import exception.CupoCompletoException;
 
 import java.util.Date;
 
 public class Prueba {
     public static void main(String[] args) {
-        // Simulamos un servicio de pago fake
-        PagoServicio pagoFake = (inscripcion, monto, tipo, cuotas) -> new Recibo(1,"", monto);
 
-        CursosController controller = new CursosController(pagoFake);
+        // 1️⃣ Crear PagoServicio
+        PagoServicio pagoServicio = new PagoServicioImp();
 
-        Docente docente = new Docente("Laura", "laura@mail.com", "1234", "Programación");
-        Alumno alumno = new Alumno("Sofi", "sofi@mail.com", "abcd", new Date());
+        UsuariosController controllerU = new UsuariosController();
 
-        Curso curso = controller.crearCurso(docente, "Java Inicial", "Intro a Java", 20, "online");
+        // 2️⃣ Inicializar controladora
+        CursosController cursosController = new CursosController(pagoServicio, controllerU);
 
-        // Crear módulos
-        Modulo m1 = new Modulo("Fundamentos", "Variables y tipos de datos");
-        Modulo m2 = new Modulo("POO", "Clases y objetos");
-        curso.agregarModulo(m1);
-        curso.agregarModulo(m2);
+        // 3️⃣ Crear docente
+        Docente docente = new Docente("Juan Perez", "juan@mail.com", "1234", "Programación");
+        cursosController.getDocentes().add(docente);
 
-        // Crear evaluaciones y agregarlas a los módulos
-        Evaluacion e1 = new Evaluacion(Evaluacion.TIPO_TP, new Date(), 10);
-        Evaluacion e2 = new Evaluacion(Evaluacion.TIPO_FINAL, new Date(), 100);
-        m1.agregarEvaluacion(e1);
-        m2.agregarEvaluacion(e2);
+        // 4️⃣ Crear curso online
+        Curso curso = cursosController.crearCurso(docente, "Java ", "Aprendé Java desde cero", 20, "ONLINE");
 
-        // Buscar módulo por ID de evaluación
-        Modulo buscado = controller.buscarModuloPorIdEval(curso, e2.getIdEval());
-        if (buscado != null) {
-            System.out.println("✅ Evaluación " + e2.getTipo() + " está en el módulo: " + buscado.getTitulo());
-        } else {
-            System.out.println("❌ No se encontró el módulo.");
-        }
+        // 5️⃣ Crear alumno
+        Alumno alumno = new Alumno("Sofi", "sofiAGAY@mail.com", "abcd", new Date());
+        cursosController.crearAlumnoEnPlataforma(alumno.getNombre(), alumno.getEmail(), alumno.getContrasenia());
 
-        // Inscribir y pagar
+
+        // 6️⃣ Inscribir alumno y pagar
         try {
-            Recibo recibo = controller.inscribirYPagar(alumno, curso, 5000f, "tarjeta", 1);
+            Recibo recibo = cursosController.inscribirYPagar(alumno, curso, 5000f, "TARJETA", 1);
             System.out.println("💳 Pago realizado por: " + alumno.getNombre() + " | Monto: " + recibo.getMonto());
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (CupoCompletoException e) {
+            System.err.println("❌ No se pudo inscribir al alumno: " + e.getMessage());
         }
     }
 }
+
+        // 7️⃣ Listar curs

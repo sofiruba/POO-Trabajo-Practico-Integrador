@@ -14,8 +14,8 @@ public class UsuariosController {
     private final List<Docente> docentes;
     private final GestorBDDUsuario gestor;
 
-    public UsuariosController(GestorBDDUsuario gestor) {
-        this.gestor = gestor;
+    public UsuariosController() {
+        this.gestor = new GestorBDDUsuario();
         this.alumnos = new ArrayList<>();
         this.docentes = new ArrayList<>();
 

@@ -22,16 +22,17 @@ public class Inscripcion {
     // Relación de Agregación: Inscripcion "1" -- "0..*" Pago : genera >
     private List<Pago> pagos;
 
-    private int contador = 0;
-    public Inscripcion( Date fecha, Alumno alumno, Curso curso) {
+    private static int contador = 0;
+    public Inscripcion( Alumno alumno, Curso curso) {
         contador++;
         this.idInscripcion = contador;
-        this.fecha = fecha;
+        this.fecha = new Date();
         this.alumno = alumno;
         this.curso = curso;
         this.estado = ESTADO_PENDIENTE;
         this.pagos = new ArrayList<>();
     }
+
 
     public void aceptar() {
         this.estado = ESTADO_ACEPTADA;
@@ -48,5 +49,14 @@ public class Inscripcion {
     public Alumno getAlumno() { return alumno; }
     public Curso getCurso() { return curso; }
     public List<Pago> getPagos() { return pagos; }
+    @Override
+    public String toString() {
+        return "📘 Inscripción #" + idInscripcion +
+                " | Alumno: " + alumno.getNombre() +
+                " | Curso: " + curso.getNombre() +
+                " | Estado: " + estado +
+                " | Fecha: " + fecha;
+    }
+
 
 }

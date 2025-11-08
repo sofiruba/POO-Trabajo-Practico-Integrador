@@ -39,6 +39,63 @@ public class Pago {
     }
 
     public int getIdPago() { return idPago; }
+
+    public void setIdPago(int idPago) {
+        this.idPago = idPago;
+    }
+
+    public Date getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(Date fecha) {
+        this.fecha = fecha;
+    }
+
+    public float getTotal() {
+        return total;
+    }
+
+    public void setTotal(float total) {
+        this.total = total;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public int getCantidadCuotas() {
+        return cantidadCuotas;
+    }
+
+    public void setCantidadCuotas(int cantidadCuotas) {
+        this.cantidadCuotas = cantidadCuotas;
+    }
+
+    public List<Cuota> getCuotas() {
+        return cuotas;
+    }
+
+    public void setCuotas(List<Cuota> cuotas) {
+        this.cuotas = cuotas;
+    }
+
+    public void setRecibo(Recibo recibo) {
+        this.recibo = recibo;
+    }
+
+    public int getContador() {
+        return contador;
+    }
+
+    public void setContador(int contador) {
+        this.contador = contador;
+    }
+
     public Recibo getRecibo() { return recibo; }
 
 }

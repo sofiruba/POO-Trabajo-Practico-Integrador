@@ -28,5 +28,9 @@ public class Alumno extends Usuario {
 
     public Date getFechaInscripcion() { return fechaInscripcion; }
     public List<Curso> getCursos() { return cursos; }
+    public void setId(int id) {
+        this.id = id;
+    }
+
 
 }

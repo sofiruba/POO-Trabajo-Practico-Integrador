@@ -101,12 +101,76 @@ public class GestorBDDCurso {
     }
 
     public ArrayList<Curso> buscarTodos() {
-        // todo
-        System.out.println("⚠ Simulación: no se cargaron cursos desde la BDD.");
-        return new ArrayList<>();
+        ArrayList<Curso> lista = new ArrayList<>();
+        String sql = "SELECT * FROM curso";
+
+        try (Statement st = conexion.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                String modalidad = rs.getString("modalidad");
+                String nombre = rs.getString("nombre");
+                String descripcion = rs.getString("descripcion");
+                int cupo = rs.getInt("cupo");
+
+                if ("ONLINE".equalsIgnoreCase(modalidad)) {
+                    String link = rs.getString("link_plataforma");
+                    CursoOnline c = new CursoOnline(nombre, descripcion, cupo, link, "ZOOM");
+                    lista.add(c);
+                } else if ("PRESENCIAL".equalsIgnoreCase(modalidad)) {
+                    String aula = rs.getString("aula");
+                    String direccion = rs.getString("direccion");
+                    CursoPresencial c = new CursoPresencial(nombre, descripcion, cupo, aula, direccion);
+                    lista.add(c);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("⚠️ Error al buscar todos los cursos: " + e.getMessage());
+        }
+
+        return lista;
     }
 
-    public void guardar(Curso nuevoCurso) {
-        // todo
+
+    public void guardar(Curso nuevoCurso, Docente docente) {
+        String sql = """
+        INSERT INTO curso 
+        (nombre, descripcion, cupo,  fecha_inicio, fecha_fin, modalidad, 
+         link_plataforma, aula, direccion)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """;
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, nuevoCurso.getNombre());
+            ps.setString(2, nuevoCurso.getDescripcion());
+            ps.setInt(3, nuevoCurso.getCupo());
+            ps.setDate(4, nuevoCurso.getFechaInicio() != null ? new java.sql.Date(nuevoCurso.getFechaInicio().getTime()) : null);
+            ps.setDate(5, nuevoCurso.getFechaFin() != null ? new java.sql.Date(nuevoCurso.getFechaFin().getTime()) : null);
+
+            if (nuevoCurso instanceof CursoOnline online) {
+                ps.setString(6, "Online");
+                ps.setString(7, online.getLinkPlataforma());
+                ps.setNull(9, Types.VARCHAR);
+                ps.setNull(8, Types.VARCHAR);
+            } else if (nuevoCurso instanceof CursoPresencial presencial) {
+                ps.setString(6, "Presencial");
+                ps.setNull(7, Types.VARCHAR);
+                ps.setString(8, presencial.getAula());
+                ps.setString(9, presencial.getDireccion());
+            } else {
+                ps.setNull(7, Types.VARCHAR);
+                ps.setNull(8, Types.VARCHAR);
+                ps.setNull(9, Types.VARCHAR);
+                ps.setNull(6, Types.VARCHAR);
+            }
+
+            ps.executeUpdate();
+            System.out.println("🟢 Curso agregado correctamente a la base de datos.");
+
+        } catch (SQLException e) {
+            System.out.println("⚠️ Error al agregar curso: " + e.getMessage());
+        }
     }
+
 }
