@@ -12,6 +12,7 @@ import modelos.pago.PagoServicio;
 import modelos.pago.Recibo;
 import modelos.usuario.Alumno;
 import modelos.usuario.Docente;
+import modelos.usuario.Usuario;
 import exception.CupoCompletoException;
 
 public class CursosController {
@@ -44,16 +45,22 @@ public class CursosController {
 
     // --- CREAR CURSO ---
     public Curso crearCurso(Docente docente, String nombre, String desc, int cupo, String modalidad) {
+        Curso cursoExistente = gestorCurso.buscarPorNombre(nombre);
+            if (cursoExistente != null) {
+                System.out.println("✅ El curso '" + nombre + "' ya existe en la BDD (ID: " + cursoExistente.getIdCurso() + "). Usando el existente.");
+                return cursoExistente;
+            }
         Curso nuevoCurso = null;
 
         switch (modalidad.toUpperCase()) {
             case "ONLINE" -> {
                 nuevoCurso = new CursoOnline(nombre, desc, cupo, "https://plataforma-temp.com", "Zoom");
-                gestorCurso.guardar(nuevoCurso, docente);
+                
+                nuevoCurso=gestorCurso.guardar(nuevoCurso, docente);
             }
             case "PRESENCIAL" -> {
                 nuevoCurso = new CursoPresencial(nombre, desc, cupo, "Aula 101", "Av. Siempre Viva 123");
-                gestorCurso.guardar(nuevoCurso, docente);
+                nuevoCurso=gestorCurso.guardar(nuevoCurso, docente);
             }
             default -> {
                 System.err.println("⚠️ Modalidad inválida. Usa 'ONLINE' o 'PRESENCIAL'.");
@@ -79,33 +86,55 @@ public class CursosController {
 
     // --- INSCRIPCIONES ---
     public Inscripcion inscribirAlumno(Alumno alumno, Curso curso) throws CupoCompletoException {
+        if (gestorInscripciones.existeInscripcion(alumno.getId(), curso.getIdCurso())) {
+        System.err.println("❌ ERROR: El alumno " + alumno.getNombre() + 
+                           " ya se encuentra inscrito en el curso " + curso.getNombre() + ".");
+        return null; // No creamos ni persistimos la inscripción
+    }
         Inscripcion nuevaInscripcion = new Inscripcion(alumno, curso);
-        inscripciones.add(nuevaInscripcion);
-
-        // 🔹 Guardar en BDD
-        gestorInscripciones.guardar(nuevaInscripcion);
+        
+        nuevaInscripcion=gestorInscripciones.guardar(nuevaInscripcion);
 
         System.out.println("📝 Alumno " + alumno.getNombre() + " preinscripto en " + curso.getNombre());
         return nuevaInscripcion;
     }
-    public Alumno crearAlumnoEnPlataforma(String nombre, String email, String contrasenia) {
-        // Delegamos la creación al UsuariosController
-        Alumno nuevoAlumno = new Alumno(nombre, email, contrasenia, new Date());
-        usuariosController.registrarAlumno(nuevoAlumno);
+// Archivo: CursosController.java
 
-        // Lo agregamos a la lista local si queremos tenerlo sincronizado
-        if (nuevoAlumno != null) {
-            alumnos.add(nuevoAlumno);
-            System.out.println("✅ Alumno agregado a la plataforma desde CursosController: " + nombre);
-        }
+// Cambio el tipo de retorno a Alumno
+// Archivo: CursosController.java
 
-        return nuevoAlumno;
+public Alumno crearAlumnoEnPlataforma(String nombre, String email, String contrasenia) {
+    // 1. 🔍 BUSCAR SI EL ALUMNO YA EXISTE EN LA BDD
+    Alumno alumnoExistente = usuariosController.buscarAlumnoPorEmail(email);
+
+    if (alumnoExistente != null) {
+        System.out.println("✅ El alumno ya existe en la plataforma (ID BDD: " + alumnoExistente.getId() + "), se usará el existente.");
+        return alumnoExistente; // 👈 Retorna el objeto ya sincronizado con el ID de la BDD
     }
+    
+    // 2. 📝 SI NO EXISTE, CREARLO Y REGISTRARLO
+    Alumno nuevoAlumno = new Alumno(nombre, email, contrasenia, new Date());
+
+    // El metodo registrarAlumno ahora guarda en BDD y sincroniza el ID (por la solucion anterior)
+    Alumno alumnoConIdBDD = usuariosController.registrarAlumno(nuevoAlumno);
+
+    // Lo agregamos a la lista local si queremos tenerlo sincronizado
+    if (alumnoConIdBDD != null) {
+        alumnos.add(alumnoConIdBDD);
+        System.out.println("✅ Alumno agregado a la plataforma desde CursosController: " + alumnoConIdBDD.getNombre());
+    }
+
+    return alumnoConIdBDD;
+}
 
     public Recibo inscribirYPagar(Alumno alumno, Curso curso, float monto, String tipoPago, int cuotas)
             throws CupoCompletoException {
 
         Inscripcion inscripcion = inscribirAlumno(alumno, curso);
+        if (inscripcion == null) {
+        System.out.println("⚠️ Proceso de pago abortado. Inscripción no realizada.");
+        return null;
+    }
         Recibo recibo = pagoServicio.pagar(inscripcion, monto, tipoPago, cuotas);
 
         if (recibo != null) {
@@ -139,6 +168,9 @@ public class CursosController {
 
     // --- GETTERS ---
     public List<Alumno> getAlumnos() { return alumnos; }
+    public List<Curso> obtenerTodos() {
+        return new ArrayList<>(cursos);
+    }
     public List<Docente> getDocentes() { return docentes; }
     public List<Curso> getCursos() { return cursos; }
     public List<Inscripcion> getInscripciones() { return inscripciones; }

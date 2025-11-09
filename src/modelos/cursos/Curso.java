@@ -119,4 +119,8 @@ public abstract class Curso implements Comparable<Curso>{
         return "Curso{" + nombre + ", id=" + idCurso + "}";
     }
 
+    public void setIdCurso(int idCurso) {
+        this.idCurso = idCurso;
+    }
+
 }

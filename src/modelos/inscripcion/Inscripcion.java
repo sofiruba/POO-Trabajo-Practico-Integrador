@@ -41,7 +41,11 @@ public class Inscripcion {
 
     public void registrarPago(Pago nuevoPago) {
         this.pagos.add(nuevoPago);
+
+
     }
+
+    public void setIdInscripcion(int idInscripcion) { this.idInscripcion = idInscripcion; }
 
     public int getIdInscripcion() { return idInscripcion; }
     public Date getFecha() { return fecha; }

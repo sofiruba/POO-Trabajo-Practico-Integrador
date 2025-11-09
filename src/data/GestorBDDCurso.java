@@ -133,44 +133,78 @@ public class GestorBDDCurso {
     }
 
 
-    public void guardar(Curso nuevoCurso, Docente docente) {
-        String sql = """
-        INSERT INTO curso 
-        (nombre, descripcion, cupo,  fecha_inicio, fecha_fin, modalidad, 
-         link_plataforma, aula, direccion)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """;
+    // Archivo: GestorBDDCurso.java
 
-        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setString(1, nuevoCurso.getNombre());
-            ps.setString(2, nuevoCurso.getDescripcion());
-            ps.setInt(3, nuevoCurso.getCupo());
-            ps.setDate(4, nuevoCurso.getFechaInicio() != null ? new java.sql.Date(nuevoCurso.getFechaInicio().getTime()) : null);
-            ps.setDate(5, nuevoCurso.getFechaFin() != null ? new java.sql.Date(nuevoCurso.getFechaFin().getTime()) : null);
+public Curso guardar(Curso nuevoCurso, Docente docente) {
+    // ... tu SQL (asegúrate de incluir idDocente si lo necesitas) ...
+    String sql = """
+    INSERT INTO curso 
+    (nombre, descripcion, cupo,  fecha_inicio, fecha_fin, modalidad, 
+     link_plataforma, aula, direccion, idDocente)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """; // ⚠️ AÑADÍ 'idDocente' al SQL para que se guarde el docente.
 
-            if (nuevoCurso instanceof CursoOnline online) {
-                ps.setString(6, "Online");
-                ps.setString(7, online.getLinkPlataforma());
-                ps.setNull(9, Types.VARCHAR);
-                ps.setNull(8, Types.VARCHAR);
-            } else if (nuevoCurso instanceof CursoPresencial presencial) {
-                ps.setString(6, "Presencial");
-                ps.setNull(7, Types.VARCHAR);
-                ps.setString(8, presencial.getAula());
-                ps.setString(9, presencial.getDireccion());
-            } else {
-                ps.setNull(7, Types.VARCHAR);
-                ps.setNull(8, Types.VARCHAR);
-                ps.setNull(9, Types.VARCHAR);
-                ps.setNull(6, Types.VARCHAR);
+    try (PreparedStatement ps = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // 💡 CLAVE
+        // ... (Tu código para setear parámetros 1 a 9) ...
+
+        // ... (Asegúrate de setear idDocente en ps.setInt(10, docente.getId()))
+        ps.setInt(10, docente.getId()); // Asumiendo que ahora es el parámetro 10.
+        
+        ps.executeUpdate();
+
+        // 2. Recuperar el ID generado por la BDD (AUTO_INCREMENT)
+        try (ResultSet rs = ps.getGeneratedKeys()) {
+            if (rs.next()) {
+                int idGenerado = rs.getInt(1);
+                nuevoCurso.setIdCurso(idGenerado); // 🌟 SINCRONIZAR
             }
-
-            ps.executeUpdate();
-            System.out.println("🟢 Curso agregado correctamente a la base de datos.");
-
-        } catch (SQLException e) {
-            System.out.println("⚠️ Error al agregar curso: " + e.getMessage());
         }
+        
+        System.out.println("🟢 Curso agregado correctamente a la base de datos (ID: " + nuevoCurso.getIdCurso() + ").");
+        return nuevoCurso; // Devolvemos el curso con el ID sincronizado
+
+    } catch (SQLException e) {
+        System.out.println("⚠️ Error al agregar curso: " + e.getMessage());
+        return null; // En caso de error, devolvemos null
     }
+}
+public Curso buscarPorNombre(String nombreCurso) {
+    String sql = "SELECT * FROM curso WHERE nombre = ?";
+    
+    try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+        ps.setString(1, nombreCurso);
+        
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                // Si encontramos el curso, lo reconstruimos y lo devolvemos
+                String modalidad = rs.getString("modalidad");
+                String nombre = rs.getString("nombre");
+                String descripcion = rs.getString("descripcion");
+                int cupo = rs.getInt("cupo");
+                int idCurso = rs.getInt("idCurso");
+                
+                Curso cursoEncontrado = null;
+                
+                if ("ONLINE".equalsIgnoreCase(modalidad)) {
+                    String link = rs.getString("link_plataforma");
+                    // Aquí se asume que sabes el nombre de la plataforma (ej: ZOOM)
+                    cursoEncontrado = new CursoOnline(nombre, descripcion, cupo, link, "ZOOM");
+                } else if ("PRESENCIAL".equalsIgnoreCase(modalidad)) {
+                    String aula = rs.getString("aula");
+                    String direccion = rs.getString("direccion");
+                    cursoEncontrado = new CursoPresencial(nombre, descripcion, cupo, aula, direccion);
+                }
+                
+                if (cursoEncontrado != null) {
+                    cursoEncontrado.setIdCurso(idCurso); // Sincronizamos el ID de la BDD
+                    return cursoEncontrado;
+                }
+            }
+        }
+    } catch (SQLException e) {
+        System.out.println("⚠️ Error al buscar curso por nombre: " + e.getMessage());
+    }
+    return null;
+}
 
 }

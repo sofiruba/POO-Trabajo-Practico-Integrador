@@ -24,10 +24,16 @@ public class UsuariosController {
         this.docentes.addAll(gestor.buscarTodosDocentes());
     }
 
-    public void registrarAlumno(Alumno alumno) {
-        gestor.guardarAlumno(alumno);
-        alumnos.add(alumno);
-        System.out.println("Alumno registrado: " + alumno.getNombre());
+    // Archivo: UsuariosController.java
+
+    // Cambiamos a que devuelva Alumno
+    public Alumno registrarAlumno(Alumno alumno) {
+        // Guardar y sincronizar ID
+        Alumno alumnoConId = gestor.guardarAlumno(alumno);
+        // Agregamos el objeto sincronizado a la lista en memoria
+        alumnos.add(alumnoConId);
+        System.out.println("Alumno registrado: " + alumnoConId.getNombre());
+        return alumnoConId; // Devolvemos el objeto con el ID correcto
     }
 
     public void registrarDocente(Docente docente) {
@@ -37,15 +43,21 @@ public class UsuariosController {
     }
 
     public Usuario login(String email, String contrasenia) {
+        Docente docente = gestor.buscarDocentePorEmail(email);
+        if (docente != null && docente.getContrasenia().equals(contrasenia)) {
+            docente.login();
+            return docente;
+        }
+        
+        // Si no es docente, buscar en usuarios (alumnos)
         Usuario usuario = gestor.buscarPorEmail(email);
-
         if (usuario != null && usuario.getContrasenia().equals(contrasenia)) {
             usuario.login();
             return usuario;
-        } else {
-            System.out.println("Credenciales incorrectas.");
-            return null;
         }
+        
+        System.out.println("Credenciales incorrectas.");
+        return null;
     }
 
     public void logout(Usuario usuario) {
@@ -62,7 +74,17 @@ public class UsuariosController {
         for (Docente d : docentes) {
             if (d.getEmail().equalsIgnoreCase(email)) return d;
         }
+        Docente docente = gestor.buscarDocentePorEmail(email);
+        if (docente != null) return docente;
         return gestor.buscarPorEmail(email);
+    }
+
+    public Alumno buscarAlumnoPorEmail(String email) {
+        Alumno alumno = gestor.buscarAlumnoPorEmail(email);
+        if (alumno == null) {
+            System.out.println("⚠️ No se encontró alumno con email: " + email);
+        }
+        return alumno;
     }
 
     public List<Alumno> getAlumnos() {
@@ -71,5 +93,19 @@ public class UsuariosController {
 
     public List<Docente> getDocentes() {
         return docentes;
+    }
+        public List<Alumno> obtenerTodosAlumnos() {
+        return new ArrayList<>(alumnos);
+    }
+    
+    public List<Docente> obtenerTodosDocentes() {
+        return new ArrayList<>(docentes);
+    }
+    
+    public List<Usuario> obtenerTodosLosUsuarios() {
+        List<Usuario> todosLosUsuarios = new ArrayList<>();
+        todosLosUsuarios.addAll(alumnos);
+        todosLosUsuarios.addAll(docentes);
+        return todosLosUsuarios;
     }
 }

@@ -18,22 +18,53 @@ public class GestorBDDInscripcion {
         }
     }
 
-    public void guardar(Inscripcion inscripcion) {
-        String sql = "INSERT INTO inscripcion (idAlumno, idCurso, fecha, estado) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, inscripcion.getAlumno().getId());
-            ps.setInt(2, inscripcion.getCurso().getIdCurso());
-            ps.setDate(3, new java.sql.Date(inscripcion.getFecha().getTime()));
-            ps.setString(4, inscripcion.getEstado());
-            ps.executeUpdate();
-            System.out.println("📝 Alumno " + inscripcion.getAlumno().getNombre() + " preinscripto en " + inscripcion.getCurso().getNombre());
-        } catch (SQLException e) {
-            System.err.println("❌ Error al guardar inscripción: " + e.getMessage());
+    // Archivo: GestorBDDInscripcion.java
+
+public Inscripcion guardar(Inscripcion inscripcion) {
+    String sql = "INSERT INTO inscripcion (idUsuario, idCurso, fecha, estado) VALUES (?, ?, ?, ?)";
+    try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // 💡 CLAVE
+        ps.setInt(1, inscripcion.getAlumno().getId());
+        ps.setInt(2, inscripcion.getCurso().getIdCurso());
+        ps.setDate(3, new java.sql.Date(inscripcion.getFecha().getTime()));
+        ps.setString(4, inscripcion.getEstado());
+        ps.executeUpdate();
+
+        // 2. Recuperar el ID generado por la BDD (AUTO_INCREMENT)
+        try (ResultSet rs = ps.getGeneratedKeys()) {
+            if (rs.next()) {
+                int idGenerado = rs.getInt(1);
+                inscripcion.setIdInscripcion(idGenerado); // 🌟 SINCRONIZAR
+            }
         }
+        
+        System.out.println("📝 Alumno " + inscripcion.getAlumno().getNombre() + " preinscripto en " + inscripcion.getCurso().getNombre() + " (ID Inscripción BDD: " + inscripcion.getIdInscripcion() + ")");
+    } catch (SQLException e) {
+        System.err.println("❌ Error al guardar inscripción: " + e.getMessage());
     }
+    return inscripcion;
+}
+// Archivo: GestorBDDInscripcion.java
+
+public boolean existeInscripcion(int idAlumno, int idCurso) {
+    String sql = "SELECT COUNT(*) FROM inscripcion WHERE idUsuario = ? AND idCurso = ?";
+    
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, idAlumno);
+        ps.setInt(2, idCurso);
+        
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next() && rs.getInt(1) > 0) {
+                return true; // Existe al menos una inscripción
+            }
+        }
+    } catch (SQLException e) {
+        System.err.println("❌ Error al verificar la existencia de la inscripción: " + e.getMessage());
+    }
+    return false;
+}
 
     public void actualizarEstado(int idAlumno, int idCurso, String nuevoEstado) {
-        String sql = "UPDATE inscripcion SET estado = ? WHERE idAlumno = ? AND idCurso = ?";
+        String sql = "UPDATE inscripcion SET estado = ? WHERE idUsuario = ? AND idCurso = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nuevoEstado);
             ps.setInt(2, idAlumno);

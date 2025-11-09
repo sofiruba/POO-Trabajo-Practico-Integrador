@@ -1,8 +1,6 @@
 import controller.CursosController;
 import controller.UsuariosController;
-import modelos.pago.PagoServicio;
 import modelos.pago.*;
-import modelos.pago.Recibo;
 import modelos.usuario.Alumno;
 import modelos.usuario.Docente;
 import modelos.cursos.Curso;
@@ -29,17 +27,27 @@ public class Prueba {
         Curso curso = cursosController.crearCurso(docente, "Java ", "Aprendé Java desde cero", 20, "ONLINE");
 
         // 5️⃣ Crear alumno
-        Alumno alumno = new Alumno("Sofi", "sofiAGAY@mail.com", "abcd", new Date());
-        cursosController.crearAlumnoEnPlataforma(alumno.getNombre(), alumno.getEmail(), alumno.getContrasenia());
-
+        Alumno alumno = cursosController.crearAlumnoEnPlataforma("Sofi", "sofiAGAY@mail.com", "abcd");
 
         // 6️⃣ Inscribir alumno y pagar
-        try {
-            Recibo recibo = cursosController.inscribirYPagar(alumno, curso, 5000f, "TARJETA", 1);
-            System.out.println("💳 Pago realizado por: " + alumno.getNombre() + " | Monto: " + recibo.getMonto());
-        } catch (CupoCompletoException e) {
-            System.err.println("❌ No se pudo inscribir al alumno: " + e.getMessage());
-        }
+   // Archivo: Prueba.java
+
+// 6️⃣ Inscribir alumno y pagar
+try {
+    Recibo recibo = cursosController.inscribirYPagar(alumno, curso, 5000f, "TARJETA", 1);
+    
+    // 💡 CLAVE: Validar que el recibo no sea null antes de usarlo
+    if (recibo != null) {
+        float montoNew = Float.parseFloat(recibo.getMonto().replace(",", "."));
+        System.out.printf("💳 Pago realizado por: %s | Monto: %.2f\n", alumno.getNombre(), montoNew);
+    } else {
+        System.out.println("⚠️ No se generó recibo porque la inscripción ya existe o el pago falló.");
+    }
+    
+} catch (CupoCompletoException e) {
+    System.err.println("❌ No se pudo inscribir al alumno: " + e.getMessage());
+}
+// 7️⃣ Listar curs
     }
 }
 

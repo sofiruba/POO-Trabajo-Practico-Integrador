@@ -16,23 +16,36 @@ public class GestorBDDUsuario {
     private static final String PASSWORD = "mysql"; // tu clave
 
     // 🔹 Guardar Alumno
-    public void guardarAlumno(Alumno alumno) {
-        String sql = "INSERT INTO usuario (nombre, email, contrasenia, fecha_inscripcion, tipo) VALUES (?, ?, ?, ?, 'ALUMNO')";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    // Archivo: GestorBDDUsuario.java
 
-            ps.setString(1, alumno.getNombre());
-            ps.setString(2, alumno.getEmail());
-            ps.setString(3, alumno.getContrasenia());
-            ps.setDate(4, new java.sql.Date(alumno.getFechaInscripcion().getTime()));
-            ps.executeUpdate();
+// 🔹 Guardar Alumno (Cambiamos a que devuelva Alumno)
+public Alumno guardarAlumno(Alumno alumno) {
+    // Solicitamos a JDBC que nos devuelva las claves generadas
+    String sql = "INSERT INTO usuario (nombre, email, contrasenia, fecha_registro, especialidad, tipo) VALUES (?, ?, ?, ?, NULL,'ALUMNO')";
+    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+         // 💡 CLAVE: Indicamos que queremos las claves generadas (el idUsuario)
+         PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            System.out.println("Alumno guardado correctamente en la base de datos.");
+        ps.setString(1, alumno.getNombre());
+        ps.setString(2, alumno.getEmail());
+        ps.setString(3, alumno.getContrasenia());
+        ps.setDate(4, new java.sql.Date(alumno.getFechaInscripcion().getTime()));
+        ps.executeUpdate();
 
-        } catch (SQLException e) {
-            System.err.println("Error al guardar alumno: " + e.getMessage());
+        // 2. Recuperar el ID generado por la BDD (AUTO_INCREMENT)
+        try (ResultSet rs = ps.getGeneratedKeys()) {
+            if (rs.next()) {
+                int idGenerado = rs.getInt(1);
+                alumno.setId(idGenerado); // 🌟 SINCRONIZAMOS el objeto Java con el ID de la BDD
+                System.out.println("Alumno guardado (ID: " + idGenerado + ") correctamente en la base de datos.");
+            }
         }
+
+    } catch (SQLException e) {
+        System.err.println("Error al guardar alumno: " + e.getMessage());
     }
+    return alumno; // Devolvemos el objeto Alumno con el ID correcto
+}
 
     // 🔹 Guardar Docente
     public void guardarDocente(Docente docente) {
@@ -71,7 +84,7 @@ public class GestorBDDUsuario {
                             rs.getString("nombre"),
                             rs.getString("email"),
                             rs.getString("contrasenia"),
-                            rs.getDate("fecha_inscripcion")
+                            rs.getDate("fecha_registro")
                     );
                 } else if ("docente".equalsIgnoreCase(rol)) {
                     usuario = new Docente(
@@ -89,6 +102,33 @@ public class GestorBDDUsuario {
 
         return usuario;
     }
+    public Alumno buscarAlumnoPorEmail(String email) {
+    String sql = "SELECT * FROM usuario WHERE email = ? AND tipo = 'ALUMNO'";
+    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+        if (rs.next()) {
+            // Creamos explícitamente un ALUMNO
+            Alumno alumno = new Alumno(
+
+                rs.getString("nombre"),
+                rs.getString("email"),
+                rs.getString("contrasenia"),
+                rs.getDate("fecha_registro")
+            );
+            alumno.setId(rs.getInt("idUsuario"));
+            return alumno;
+        }
+
+    } catch (SQLException e) {
+        System.out.println("⚠️ Error al buscar alumno por email: " + e.getMessage());
+    }
+    return null;
+}
+
 
     // 🔹 Buscar todos alumnos
     public List<Alumno> buscarTodosAlumnos() {
@@ -104,7 +144,7 @@ public class GestorBDDUsuario {
                         rs.getString("nombre"),
                         rs.getString("email"),
                         rs.getString("contrasenia"),
-                        rs.getDate("fecha_inscripcion")
+                        rs.getDate("fecha_registro")
                 ));
             }
 
@@ -129,7 +169,7 @@ public class GestorBDDUsuario {
                         rs.getString("nombre"),
                         rs.getString("email"),
                         rs.getString("contrasenia"),
-                       ""
+                        rs.getString("especialidad")
                 ));
             }
 
@@ -138,5 +178,30 @@ public class GestorBDDUsuario {
         }
 
         return lista;
+    }
+
+        public Docente buscarDocentePorEmail(String email) {
+        String sql = "SELECT * FROM usuario WHERE email = ? AND tipo = 'DOCENTE'";
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return new Docente(
+                        rs.getString("nombre"),
+                        rs.getString("email"),
+                        rs.getString("contrasenia"),
+                        rs.getString("especialidad")
+                );
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al buscar docente: " + e.getMessage());
+        }
+
+        return null;
     }
 }
