@@ -4,9 +4,11 @@ import modelos.pago.*;
 import modelos.usuario.Alumno;
 import modelos.usuario.Docente;
 import modelos.cursos.Curso;
+import modelos.cursos.Modulo;
 import exception.CupoCompletoException;
 
 import java.util.Date;
+import java.util.List;
 
 public class Prueba {
     public static void main(String[] args) {
@@ -20,12 +22,25 @@ public class Prueba {
         CursosController cursosController = new CursosController(pagoServicio, controllerU);
 
         // 3️⃣ Crear docente
-        Docente docente = new Docente("Juan Perez", "juan@mail.com", "1234", "Programación");
-        cursosController.getDocentes().add(docente);
+        Docente docente = cursosController.crearDocenteEnPlataforma("Juan Perez", "juan@mail.com", "1234", "Programación");
 
         // 4️⃣ Crear curso online
         Curso curso = cursosController.crearCurso(docente, "Java ", "Aprendé Java desde cero", 20, "ONLINE");
+        Modulo modulo1 = cursosController.agregarModulo(curso, "Introducción a Java", "Variables, tipos de datos y estructuras de control.");
+        Modulo modulo2 = cursosController.agregarModulo(curso, "Programación Orientada a Objetos", "Clases, objetos, herencia y polimorfismo.");
 
+        System.out.println("\n--- Módulos del curso " + curso.getNombre() + " ---");
+
+List<Modulo> listaModulos = cursosController.obtenerModulosDeCurso(curso);
+
+if (listaModulos.isEmpty()) {
+    System.out.println("El curso no tiene módulos cargados.");
+} else {
+    for (Modulo m : listaModulos) {
+        // Asumo que Modulo.toString() es descriptivo, o puedes usar sus getters.
+        System.out.println("  [ID: " + m.getIdModulo() + "] " + m.getTitulo() + " - Contenido: " + m.getContenido().substring(0, 30) + "...");
+    }
+}
         // 5️⃣ Crear alumno
         Alumno alumno = cursosController.crearAlumnoEnPlataforma("Sofi", "sofiAGAY@mail.com", "abcd");
 

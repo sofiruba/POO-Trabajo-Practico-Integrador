@@ -18,10 +18,8 @@ public abstract class Curso implements Comparable<Curso>{
     public static final String ESTADO_PUBLICADO = "publicado";
     public static final String ESTADO_CERRADO = "cerrado";
 
-    private static int contador = 0;
     public Curso( String nombre, String descripcion, int cupo) {
-        contador++;
-        this.idCurso = contador;
+
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.cupo = cupo;

@@ -47,24 +47,37 @@ public Alumno guardarAlumno(Alumno alumno) {
     return alumno; // Devolvemos el objeto Alumno con el ID correcto
 }
 
-    // 🔹 Guardar Docente
-    public void guardarDocente(Docente docente) {
-        String sql = "INSERT INTO usuario (nombre, email, contrasenia, especialidad, tipo) VALUES (?, ?, ?, ?, 'DOCENTE')";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+// Archivo: GestorBDDUsuario.java (en guardarDocente)
 
-            ps.setString(1, docente.getNombre());
-            ps.setString(2, docente.getEmail());
-            ps.setString(3, docente.getContrasenia());
-            ps.setString(4, docente.getEspecialidad());
-            ps.executeUpdate();
+// Archivo: GestorBDDUsuario.java (Método guardarDocente)
 
-            System.out.println("Docente guardado correctamente en la base de datos.");
+public Docente guardarDocente(Docente docente) {
+    String sql = "INSERT INTO usuario (nombre, email, contrasenia, especialidad, tipo) VALUES (?, ?, ?, ?, 'DOCENTE')";
+    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+         // 💡 CLAVE: Incluir Statement.RETURN_GENERATED_KEYS para obtener el ID de la BDD
+         PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { 
 
-        } catch (SQLException e) {
-            System.err.println("Error al guardar docente: " + e.getMessage());
+        ps.setString(1, docente.getNombre());
+        ps.setString(2, docente.getEmail());
+        ps.setString(3, docente.getContrasenia());
+        ps.setString(4, docente.getEspecialidad());
+        ps.executeUpdate();
+
+        // 2. Recuperar el ID generado por la BDD (AUTO_INCREMENT)
+        try (ResultSet rs = ps.getGeneratedKeys()) {
+            if (rs.next()) {
+                int idGenerado = rs.getInt(1);
+                docente.setId(idGenerado); // ✅ ESTO SINCRONIZA EL OBJETO
+                System.out.println("Docente guardado (ID: " + idGenerado + ") correctamente en la base de datos.");
+            }
         }
+
+    } catch (SQLException e) {
+        System.err.println("Error al guardar docente: " + e.getMessage()); 
     }
+    return docente; 
+}
+
 
     // 🔹 Buscar por email
     public Usuario buscarPorEmail(String email) {
@@ -179,29 +192,32 @@ public Alumno guardarAlumno(Alumno alumno) {
 
         return lista;
     }
+// Archivo: GestorBDDUsuario.java (Método buscarDocentePorEmail)
 
-        public Docente buscarDocentePorEmail(String email) {
-        String sql = "SELECT * FROM usuario WHERE email = ? AND tipo = 'DOCENTE'";
+public Docente buscarDocentePorEmail(String email) {
+    String sql = "SELECT * FROM usuario WHERE email = ? AND tipo = 'DOCENTE'";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+         PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, email);
-            ResultSet rs = ps.executeQuery();
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
 
-            if (rs.next()) {
-                return new Docente(
-                        rs.getString("nombre"),
-                        rs.getString("email"),
-                        rs.getString("contrasenia"),
-                        rs.getString("especialidad")
-                );
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error al buscar docente: " + e.getMessage());
+        if (rs.next()) {
+            Docente docente = new Docente(
+                    rs.getString("nombre"),
+                    rs.getString("email"),
+                    rs.getString("contrasenia"),
+                    rs.getString("especialidad")
+            );
+            // ✅ CLAVE: Asignar el ID de la base de datos al objeto Java
+            docente.setId(rs.getInt("idUsuario")); 
+            return docente;
         }
 
-        return null;
+    } catch (SQLException e) {
+        System.err.println("Error al buscar docente: " + e.getMessage());
     }
+    return null;
+}
 }

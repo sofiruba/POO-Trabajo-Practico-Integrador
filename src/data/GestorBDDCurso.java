@@ -9,6 +9,9 @@ import modelos.cursos.*;
 
 public class GestorBDDCurso {
     private Connection conexion;
+    private static final String URL = "jdbc:mysql://localhost:3306/plataforma_cursos";
+    private static final String USER = "root";
+    private static final String PASSWORD = "mysql";
 
     public GestorBDDCurso() {
         try {
@@ -22,50 +25,77 @@ public class GestorBDDCurso {
         }
     }
 
-    public void agregarCurso(Curso curso, Docente docente) {
-        String sql = """
-            INSERT INTO cursos 
-            (nombre, descripcion, cupo, estado, fecha_inicio, fecha_fin, modalidad, 
-             link_plataforma, plataforma, aula, direccion, id_docente)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+// Archivo: GestorBDDCurso.java (Método guardar)
 
-        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setString(1, curso.getNombre());
-            ps.setString(2, curso.getDescripcion());
-            ps.setInt(3, curso.getCupo());
-            ps.setString(4, curso.getEstado());
-            ps.setDate(5, curso.getFechaInicio() != null ? new java.sql.Date(curso.getFechaInicio().getTime()) : null);
-            ps.setDate(6, curso.getFechaFin() != null ? new java.sql.Date(curso.getFechaFin().getTime()) : null);
+public Curso guardar(Curso nuevoCurso, Docente docente) {
+    // 1. Sentencia SQL con las 11 columnas a insertar
+    String sql = """
+    INSERT INTO curso 
+    (nombre, descripcion, cupo, estado, fecha_inicio, fecha_fin, modalidad, 
+     link_plataforma, plataforma, aula, direccion, idDocente) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """; // ✅ CLAVE: 11 parámetros
 
-            if (curso instanceof CursoOnline online) {
-                ps.setString(7, "Online");
-                ps.setString(8, online.getLinkPlataforma());
-                ps.setString(9, online.getPlataforma());
-                ps.setNull(10, Types.VARCHAR);
-                ps.setNull(11, Types.VARCHAR);
-            } else if (curso instanceof CursoPresencial presencial) {
-                ps.setString(7, "Presencial");
-                ps.setNull(8, Types.VARCHAR);
-                ps.setNull(9, Types.VARCHAR);
-                ps.setString(10, presencial.getAula());
-                ps.setString(11, presencial.getDireccion());
-            } else {
-                ps.setNull(7, Types.VARCHAR);
-                ps.setNull(8, Types.VARCHAR);
-                ps.setNull(9, Types.VARCHAR);
-                ps.setNull(10, Types.VARCHAR);
-                ps.setNull(11, Types.VARCHAR);
-            }
+    // Nota: Si usas GestorDePersistencia, cambia DriverManager.getConnection por tu método
+    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD); 
+         // 2. Pedimos las claves generadas (idCurso)
+         PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { 
 
-            ps.setInt(12, docente.getId());
-            ps.executeUpdate();
-            System.out.println("🟢 Curso agregado correctamente a la base de datos.");
+        // 3. Setear los 11 parámetros
+        ps.setString(1, nuevoCurso.getNombre());        // Param 1 (nombre)
+        ps.setString(2, nuevoCurso.getDescripcion());   // Param 2 (descripcion)
+        ps.setInt(3, nuevoCurso.getCupo());     
+                // Param 3 (cupo)
+        
+        ps.setString(4, "inactivo");
+                // Manejo de fechas (Parámetros 4 y 5)
+        ps.setDate(5, nuevoCurso.getFechaInicio() != null ? new java.sql.Date(nuevoCurso.getFechaInicio().getTime()) : null);
+        ps.setDate(6, nuevoCurso.getFechaFin() != null ? new java.sql.Date(nuevoCurso.getFechaFin().getTime()) : null);
 
-        } catch (SQLException e) {
-            System.out.println("⚠️ Error al agregar curso: " + e.getMessage());
+        // Manejo de modalidad (Parámetros 6 al 10)
+        if (nuevoCurso instanceof CursoOnline online) {
+            ps.setString(7, "Online");
+            ps.setString(8, online.getLinkPlataforma());
+            ps.setString(9, online.getPlataforma()); // ✅ Parámetro 8: Plataforma
+            ps.setNull(10, Types.VARCHAR); // aula
+            ps.setNull(11, Types.VARCHAR); // direccion
+        } else if (nuevoCurso instanceof CursoPresencial presencial) {
+            ps.setString(7, "Presencial");
+            ps.setNull(8, Types.VARCHAR); // link_plataforma
+            ps.setNull(9, Types.VARCHAR); // plataforma
+            ps.setString(10, presencial.getAula());
+            ps.setString(11, presencial.getDireccion());
+        } else {
+            // Caso por defecto
+            ps.setNull(6, Types.VARCHAR); 
+            ps.setNull(7, Types.VARCHAR);
+            ps.setNull(8, Types.VARCHAR);
+            ps.setNull(9, Types.VARCHAR);
+            ps.setNull(10, Types.VARCHAR);
+            ps.setNull(11, Types.VARCHAR);
         }
+        
+        // 4. Clave Foránea idDocente (Parámetro 11)
+        ps.setInt(12, docente.getId()); // ✅ Parámetro 11
+
+        ps.executeUpdate();
+
+        // 5. Sincronización del ID
+        try (ResultSet rs = ps.getGeneratedKeys()) {
+            if (rs.next()) {
+                int idGenerado = rs.getInt(1);
+                nuevoCurso.setIdCurso(idGenerado); 
+            }
+        }
+        
+        System.out.println("🟢 Curso agregado correctamente a la base de datos (ID BDD: " + nuevoCurso.getIdCurso() + ").");
+
+    } catch (SQLException e) {
+        System.out.println("⚠️ Error al agregar curso: " + e.getMessage());
+        return null;
     }
+    return nuevoCurso;
+}
 
     public List<Curso> listarCursos() {
         List<Curso> lista = new ArrayList<>();
@@ -133,41 +163,7 @@ public class GestorBDDCurso {
     }
 
 
-    // Archivo: GestorBDDCurso.java
-
-public Curso guardar(Curso nuevoCurso, Docente docente) {
-    // ... tu SQL (asegúrate de incluir idDocente si lo necesitas) ...
-    String sql = """
-    INSERT INTO curso 
-    (nombre, descripcion, cupo,  fecha_inicio, fecha_fin, modalidad, 
-     link_plataforma, aula, direccion, idDocente)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """; // ⚠️ AÑADÍ 'idDocente' al SQL para que se guarde el docente.
-
-    try (PreparedStatement ps = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // 💡 CLAVE
-        // ... (Tu código para setear parámetros 1 a 9) ...
-
-        // ... (Asegúrate de setear idDocente en ps.setInt(10, docente.getId()))
-        ps.setInt(10, docente.getId()); // Asumiendo que ahora es el parámetro 10.
-        
-        ps.executeUpdate();
-
-        // 2. Recuperar el ID generado por la BDD (AUTO_INCREMENT)
-        try (ResultSet rs = ps.getGeneratedKeys()) {
-            if (rs.next()) {
-                int idGenerado = rs.getInt(1);
-                nuevoCurso.setIdCurso(idGenerado); // 🌟 SINCRONIZAR
-            }
-        }
-        
-        System.out.println("🟢 Curso agregado correctamente a la base de datos (ID: " + nuevoCurso.getIdCurso() + ").");
-        return nuevoCurso; // Devolvemos el curso con el ID sincronizado
-
-    } catch (SQLException e) {
-        System.out.println("⚠️ Error al agregar curso: " + e.getMessage());
-        return null; // En caso de error, devolvemos null
-    }
-}
+    
 public Curso buscarPorNombre(String nombreCurso) {
     String sql = "SELECT * FROM curso WHERE nombre = ?";
     

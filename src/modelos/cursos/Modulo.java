@@ -11,10 +11,8 @@ public class Modulo {
 
     private List<Evaluacion> evaluaciones; // Colección de Evaluaciones
 
-    private int contador = 0;
     public Modulo(String titulo, String contenido) {
-        contador++;
-        this.idModulo = contador;
+
         this.titulo = titulo;
         this.contenido = contenido;
         this.evaluaciones = new ArrayList<>(); // Inicializamos la colección
@@ -41,5 +39,6 @@ public class Modulo {
         return "Modulo{" + titulo + ", id=" + idModulo + "}";
     }
 
+    public void setIdModulo(int idModulo) { this.idModulo = idModulo; }
 
 }

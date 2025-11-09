@@ -7,11 +7,10 @@ public abstract class Usuario {
     protected String email;
     protected BufferedImage avatar;
     protected String contrasenia;
-    private static int contador = 0;
+
 
     public Usuario(String nombre, String email, String contrasenia) {
-        contador++;
-        this.id = contador;
+
         this.nombre = nombre;
         this.email = email;
         this.contrasenia = contrasenia;

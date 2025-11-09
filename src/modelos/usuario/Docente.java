@@ -29,4 +29,8 @@ public class Docente extends Usuario {
     }
 
     public String getEspecialidad() { return especialidad; }
+
+    public void setId(int id){
+        this.id = id;
+    }
 }

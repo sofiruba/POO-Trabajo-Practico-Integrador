@@ -3,6 +3,7 @@ package controller;
 import java.util.*;
 import data.GestorBDDCurso;
 import data.GestorBDDInscripcion;
+import data.GestorBDDModulo;
 import modelos.cursos.Curso;
 import modelos.cursos.CursoOnline;
 import modelos.cursos.CursoPresencial;
@@ -26,12 +27,14 @@ public class CursosController {
     private final GestorBDDCurso gestorCurso;
     private final GestorBDDInscripcion gestorInscripciones;
     private UsuariosController usuariosController;
+    private final GestorBDDModulo gestorModulo;
 
     public CursosController(PagoServicio pagoServicio, UsuariosController usuariosController) {
         this.pagoServicio = pagoServicio;
         this.usuariosController = usuariosController;
         this.gestorCurso = new GestorBDDCurso();
         this.gestorInscripciones = new GestorBDDInscripcion();
+        this.gestorModulo = new GestorBDDModulo();
 
         this.alumnos = new ArrayList<>();
         this.docentes = new ArrayList<>();
@@ -39,6 +42,7 @@ public class CursosController {
 
         // Cargar cursos desde la base de datos al iniciar
         this.cursos = new ArrayList<>(gestorCurso.buscarTodos());
+        
 
         System.out.println("✅ Controladora inicializada. Se cargaron " + cursos.size() + " cursos desde la base.");
     }
@@ -127,6 +131,26 @@ public Alumno crearAlumnoEnPlataforma(String nombre, String email, String contra
     return alumnoConIdBDD;
 }
 
+// Archivo: CursosController.java (Método crearDocenteEnPlataforma)
+
+public Docente crearDocenteEnPlataforma(String nombre, String email, String contrasenia, String especialidad) {
+    // 1. 🔍 BUSCAR SI EL DOCENTE YA EXISTE EN LA BDD
+    Docente docenteExistente = usuariosController.buscarDocentePorEmail(email);
+
+    if (docenteExistente != null) { // Mayor que 0 garantiza ID de BDD
+        System.out.println("✅ Docente encontrado en BDD: " + docenteExistente.getNombre() + " (ID: " + docenteExistente.getId() + "). Se usa el existente.");
+        return docenteExistente; // 👈 RETORNO INMEDIATO: Evita la creación/inserción duplicada
+    }
+
+    // 2. 📝 SI NO EXISTE, CREARLO Y REGISTRARLO
+    // Creamos el objeto (esto le asigna el ID temporal de Java)
+    Docente nuevoDocente = new Docente(nombre, email, contrasenia, especialidad); 
+
+    // 3. Registrar el docente (persiste en BDD y sincroniza el ID)
+    Docente docenteConIdBDD = usuariosController.registrarDocente(nuevoDocente);
+
+    return docenteConIdBDD;
+}
     public Recibo inscribirYPagar(Alumno alumno, Curso curso, float monto, String tipoPago, int cuotas)
             throws CupoCompletoException {
 
@@ -166,6 +190,46 @@ public Alumno crearAlumnoEnPlataforma(String nombre, String email, String contra
         return curso.buscarModuloPorIdEval(idEval);
     }
 
+    public Modulo agregarModulo(Curso curso, String titulo, String contenido) {
+        if (curso == null || curso.getIdCurso() == 0) {
+            System.err.println("❌ Error: No se puede agregar módulo. El curso no existe o no tiene ID de BDD.");
+            return null;
+        }
+
+        // 1. Crear el objeto Java
+        Modulo nuevoModulo = new Modulo(titulo, contenido);
+        
+        // 2. Persistir y sincronizar el ID
+        nuevoModulo = gestorModulo.guardar(nuevoModulo, curso.getIdCurso());
+        
+        // 3. Agregar al objeto Curso en memoria
+        if (nuevoModulo.getIdModulo() > 0) {
+            curso.agregarModulo(nuevoModulo); // Asumiendo que Curso.java tiene agregarModulo(Modulo)
+            System.out.println("✅ Módulo '" + titulo + "' agregado al curso '" + curso.getNombre() + "'.");
+            return nuevoModulo;
+        } else {
+            System.err.println("❌ No se pudo persistir el módulo en la base de datos.");
+            return null;
+        }
+    }
+    public List<Modulo> obtenerModulosDeCurso(Curso curso) {
+    if (curso == null || curso.getIdCurso() == 0) {
+        System.err.println("❌ Error: El curso es nulo o no tiene ID de BDD.");
+        return Collections.emptyList();
+    }
+    
+    // 1. Obtener la lista de módulos de la BDD
+    List<Modulo> modulosBdd = gestorModulo.obtenerModulosPorCurso(curso.getIdCurso());
+    
+    // 2. Opcional: Sincronizar la lista de módulos del objeto Curso en memoria
+    // Esto asegura que si el objeto Curso se usa más tarde, tenga todos sus módulos cargados.
+    curso.getModulos().clear(); // Asumo que getModulos() devuelve la lista interna.
+    curso.getModulos().addAll(modulosBdd);
+    
+    System.out.println("Cargados " + modulosBdd.size() + " módulos para el curso '" + curso.getNombre() + "'.");
+    
+    return modulosBdd;
+}
     // --- GETTERS ---
     public List<Alumno> getAlumnos() { return alumnos; }
     public List<Curso> obtenerTodos() {

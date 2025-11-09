@@ -8,6 +8,8 @@ import modelos.usuario.Usuario;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.print.Doc;
+
 public class UsuariosController {
 
     private final List<Alumno> alumnos;
@@ -36,11 +38,19 @@ public class UsuariosController {
         return alumnoConId; // Devolvemos el objeto con el ID correcto
     }
 
-    public void registrarDocente(Docente docente) {
-        gestor.guardarDocente(docente);
-        docentes.add(docente);
-        System.out.println("Docente registrado: " + docente.getNombre());
+public Docente registrarDocente(Docente docente) {
+    // 1. Guardar y sincronizar ID en la base de datos
+    Docente docenteConId = gestor.guardarDocente(docente); // 👈 Asume que GestorBDDUsuario.guardarDocente devuelve Docente
+    
+    // 2. Agregamos el objeto sincronizado a la lista en memoria
+    if (docenteConId != null) {
+        docentes.add(docenteConId);
+        System.out.println("Docente registrado: " + docenteConId.getNombre());
+    } else {
+        System.out.println("⚠️ No se pudo registrar el docente en la BDD.");
     }
+    return docenteConId; // Devolvemos el objeto con el ID correcto
+}
 
     public Usuario login(String email, String contrasenia) {
         Docente docente = gestor.buscarDocentePorEmail(email);
@@ -87,6 +97,13 @@ public class UsuariosController {
         return alumno;
     }
 
+    public Docente buscarDocentePorEmail(String email) {
+        Docente doc = gestor.buscarDocentePorEmail(email);
+        if (doc == null) {
+            System.out.println("⚠️ No se encontró alumno con email: " + email);
+        }
+        return doc;
+    }
     public List<Alumno> getAlumnos() {
         return alumnos;
     }
