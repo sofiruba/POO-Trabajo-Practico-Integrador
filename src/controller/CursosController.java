@@ -1,15 +1,13 @@
 package controller;
 
 import java.util.*;
+
+import data.GestorBDDCalificacion;
 import data.GestorBDDCurso;
 import data.GestorBDDEvaluacion;
 import data.GestorBDDInscripcion;
 import data.GestorBDDModulo;
-import modelos.cursos.Curso;
-import modelos.cursos.CursoOnline;
-import modelos.cursos.CursoPresencial;
-import modelos.cursos.Evaluacion;
-import modelos.cursos.Modulo;
+import modelos.cursos.*;
 import modelos.inscripcion.Inscripcion;
 import modelos.pago.PagoServicio;
 import modelos.pago.Recibo;
@@ -31,6 +29,7 @@ public class CursosController {
     private UsuariosController usuariosController;
     private final GestorBDDModulo gestorModulo;
     private final GestorBDDEvaluacion gestorEvaluacion;
+    private final GestorBDDCalificacion gestorCalificacion;
 
     public CursosController(PagoServicio pagoServicio, UsuariosController usuariosController) {
         this.pagoServicio = pagoServicio;
@@ -39,6 +38,7 @@ public class CursosController {
         this.gestorInscripciones = new GestorBDDInscripcion();
         this.gestorModulo = new GestorBDDModulo();
         this.gestorEvaluacion = new GestorBDDEvaluacion();
+        this.gestorCalificacion = new GestorBDDCalificacion();
 
         this.alumnos = new ArrayList<>();
         this.docentes = new ArrayList<>();
@@ -268,6 +268,39 @@ public Evaluacion agregarEvaluacion(Modulo modulo, String nombre, float notaMaxi
         System.err.println("❌ No se pudo persistir la evaluación.");
         return null;
     }
+}
+
+// Archivo: CursosController.java (Método registrarCalificacion)
+
+
+// ... (Necesitas inicializar GestorBDDCalificacion en el constructor) ...
+
+public Calificacion registrarCalificacion(Docente docente, Alumno alumno, Curso curso, Evaluacion evaluacion, float nota, String comentario) {
+    
+    // 1. VALIDACIÓN: Evitar calificación duplicada (1 x Evaluación x Alumno)
+    if (gestorCalificacion.existeCalificacion(alumno.getId(), evaluacion.getIdEval())) {
+        System.err.println("❌ ERROR: El alumno " + alumno.getNombre() + 
+                           " ya tiene una calificación registrada para la evaluación '" + evaluacion.getNombre() + "'.");
+        return null; 
+    }
+    
+    // 2. Lógica POO: El docente crea la Calificación (instancia en memoria)
+    Calificacion calificacion = docente.calificar(alumno, curso, evaluacion, nota, comentario);
+    
+    if (calificacion == null) return null;
+
+    // 3. Persistir en la base de datos y sincronizar ID
+    // Asumimos que gestorCalificacion.guardarCalificacion retorna el objeto sincronizado
+    Calificacion calificacionSincronizada = gestorCalificacion.guardarCalificacion(calificacion); 
+    
+    if (calificacionSincronizada != null) {
+        // 4. POO: Asignar la calificación sincronizada al Alumno
+        alumno.agregarCalificacion(calificacionSincronizada);
+        System.out.println("✅ Calificación de " + calificacionSincronizada.getNota() + 
+                           " asignada al Alumno " + alumno.getNombre() + ".");
+    }
+    
+    return calificacionSincronizada;
 }
     // --- GETTERS ---
     public List<Alumno> getAlumnos() { return alumnos; }

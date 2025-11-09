@@ -1,15 +1,18 @@
 package modelos.usuario;
 
+import modelos.cursos.Calificacion;
 import modelos.cursos.Curso;
 import modelos.cursos.Evaluacion;
 import modelos.cursos.Modulo;
 
+import modelos.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public class Alumno extends Usuario {
     private List<Curso> cursos = new ArrayList<>();
+    private List<Calificacion> calificaciones = new ArrayList<>();
     private Date fechaInscripcion;
 
     public Alumno(String nombre, String email, String contrasenia, Date fechaInscripcion) {
@@ -32,5 +35,12 @@ public class Alumno extends Usuario {
         this.id = id;
     }
 
+    public void agregarCalificacion(Calificacion calificacion) {
+        this.calificaciones.add(calificacion);
+    }
+    
+    public List<Calificacion> getCalificaciones() {
+        return calificaciones;
+    }
 
 }

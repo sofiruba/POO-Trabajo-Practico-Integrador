@@ -1,7 +1,8 @@
 package modelos.usuario;
+import modelos.cursos.Calificacion;
 import modelos.cursos.Curso;
 import modelos.cursos.CursoOnline;
-import modelos.cursos.Evaluacion;
+import modelos.cursos.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +23,18 @@ public class Docente extends Usuario {
         return curso;
     }
 
-    public void calificar(Alumno alumno, Evaluacion eval, float nota, String comentario) {
-
-        System.out.println("Docente " + nombre + " calificó a " + alumno.getNombre() +
-                " con nota " + nota);
+    public Calificacion calificar(Alumno alumno, Curso curso, Evaluacion eval, float nota, String comentario) {
+        
+        Calificacion nuevaCalificacion = new Calificacion(
+            alumno, 
+            curso, 
+            eval, 
+            nota, 
+            comentario
+        );
+        
+        System.out.println("Docente " + nombre + " creó la Calificación para " + alumno.getNombre());
+        return nuevaCalificacion;
     }
 
     public String getEspecialidad() { return especialidad; }

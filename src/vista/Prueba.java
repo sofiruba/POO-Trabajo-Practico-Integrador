@@ -4,8 +4,8 @@ import modelos.pago.*;
 import modelos.usuario.Alumno;
 import modelos.usuario.Docente;
 import modelos.cursos.Curso;
-import modelos.cursos.Evaluacion;
 import modelos.cursos.Modulo;
+import modelos.cursos.*; // Asegúrate de que el paquete es correcto
 import exception.CupoCompletoException;
 
 import java.util.Date;
@@ -16,77 +16,110 @@ public class Prueba {
 
         // 1️⃣ Crear PagoServicio
         PagoServicio pagoServicio = new PagoServicioImp();
-
         UsuariosController controllerU = new UsuariosController();
 
         // 2️⃣ Inicializar controladora
         CursosController cursosController = new CursosController(pagoServicio, controllerU);
 
-        // 3️⃣ Crear docente
+        // 3️⃣ Crear docente (Se guarda en BDD y sincroniza ID)
         Docente docente = cursosController.crearDocenteEnPlataforma("Juan Perez", "juan@mail.com", "1234", "Programación");
+        
+        // --- 4️⃣ CREACIÓN DE CURSO Y CONTENIDO ---
+        
+        // 4.1️⃣ Crear curso online (Se guarda en BDD y sincroniza ID)
+        Curso curso = cursosController.crearCurso(docente, "Java Inicial", "Curso base de Java", 20, "ONLINE");
 
-        // 4️⃣ Crear curso online
-        Curso curso = cursosController.crearCurso(docente, "Java ", "Aprendé Java desde cero", 20, "ONLINE");
-        Modulo modulo1 = cursosController.agregarModulo(curso, "Introducción a Java", "Variables, tipos de datos y estructuras de control.");
+        // 4.2️⃣ Agregar Módulos
+        Modulo modulo1 = cursosController.agregarModulo(curso, "Introducción a Java", "Variables y estructuras de control.");
         Modulo modulo2 = cursosController.agregarModulo(curso, "Programación Orientada a Objetos", "Clases, objetos, herencia y polimorfismo.");
 
+        // TEST UNICIDAD: Intentar agregar el mismo módulo (debería fallar)
+        cursosController.agregarModulo(curso, "Introducción a Java", "Variables y estructuras de control."); 
+
+        // 4.3️⃣ Agregar Evaluaciones (Hecho por el Docente)
+        Evaluacion eval1 = null;
+        Evaluacion eval2 = null;
         if (modulo1 != null) {
             System.out.println("\n--- Creación de Evaluaciones por Docente ---");
-            // Evaluación para Módulo 1: Introducción
-            Evaluacion eval1 = cursosController.agregarEvaluacion(
+            // Evaluación 1 para Módulo 1
+            eval1 = cursosController.agregarEvaluacion(
                 modulo1, 
                 "Quiz Inicial", 
                 10.0f, 
                 "Cuestionario sobre variables y bucles básicos."
             );
-            System.out.printf("Docente %s creó la Evaluación: %s\n", docente.getNombre(), eval1.getNombre());
+            // TEST UNICIDAD: Intentar agregar la misma evaluación (debería fallar)
+            cursosController.agregarEvaluacion(modulo1, "Quiz Inicial", 10.0f, "Cuestionario sobre variables y bucles básicos.");
         }
 
         if (modulo2 != null) {
-            // Evaluación para Módulo 2: POO
-            Evaluacion eval2 = cursosController.agregarEvaluacion(
+            // Evaluación 2 para Módulo 2
+            eval2 = cursosController.agregarEvaluacion(
                 modulo2, 
                 "Proyecto Final POO", 
                 100.0f, 
                 "Implementar un sistema con herencia y polimorfismo."
             );
-            System.out.printf("Docente %s creó la Evaluación: %s\n", docente.getNombre(), eval2.getNombre());
         }
-        System.out.println("\n--- Módulos del curso " + curso.getNombre() + " ---");
 
-List<Modulo> listaModulos = cursosController.obtenerModulosDeCurso(curso);
+        // 4.4️⃣ Listar Módulos y Evaluaciones
+        System.out.println("\n--- Módulos y Evaluaciones del curso " + (curso != null ? curso.getNombre() : "N/A") + " ---");
+        List<Modulo> listaModulos = cursosController.obtenerModulosDeCurso(curso);
+        for (Modulo m : listaModulos) {
+            System.out.println("  [ID: " + m.getIdModulo() + "] " + m.getTitulo());
+            for (Evaluacion e : m.getEvaluaciones()) {
+                System.out.println("    -> Evaluación: " + e.getNombre() + " (Max: " + e.getNotaMaxima() + ")");
+            }
+        }
+        
+        // --- 5️⃣ ALUMNO Y CALIFICACIÓN ---
 
-if (listaModulos.isEmpty()) {
-    System.out.println("El curso no tiene módulos cargados.");
-} else {
-    for (Modulo m : listaModulos) {
-        // Asumo que Modulo.toString() es descriptivo, o puedes usar sus getters.
-        System.out.println("  [ID: " + m.getIdModulo() + "] " + m.getTitulo() + " - Contenido: " + m.getContenido().substring(0, 30) + "...");
+        // 5.1️⃣ Crear alumno (Se guarda en BDD y sincroniza ID)
+        Alumno alumno = cursosController.crearAlumnoEnPlataforma("Sofi", "sofia@mail.com", "abcd");
+
+        // 5.2️⃣ Alumno rinde la evaluación (Simulación de la acción POO)
+        if (modulo1 != null && eval1 != null) {
+            System.out.println("\n--- Alumno Rinde Evaluación ---");
+            alumno.rendirEvaluacion(curso, modulo1, eval1);
+        }
+        
+        // 5.3️⃣ Docente registra Calificación (Se guarda en BDD y sincroniza ID)
+        System.out.println("\n--- Docente Registra Calificación ---");
+        Calificacion calificacion1 = null;
+        if (alumno != null && curso != null && eval1 != null) {
+            calificacion1 = cursosController.registrarCalificacion(
+                docente, 
+                alumno, 
+                curso, 
+                eval1, 
+                8.5f, 
+                "Buen entendimiento de bucles."
+            );
+            System.out.println("⭐ " + (calificacion1 != null ? calificacion1 : "Error al registrar calificación."));
+        }
+
+        // TEST UNICIDAD: Intentar calificar al mismo alumno en la misma evaluación (debería fallar)
+        cursosController.registrarCalificacion(docente, alumno, curso, eval1, 9.0f, "Intento duplicado.");
+
+
+        // --- 6️⃣ INSCRIPCIÓN Y PAGO ---
+
+        // 6.1️⃣ Inscribir alumno y pagar (con validación de unicidad)
+        try {
+            System.out.println("\n--- Inscripción y Pago ---");
+            Recibo recibo = cursosController.inscribirYPagar(alumno, curso, 5000f, "TARJETA", 1);
+            
+            // CLAVE: Validar que el recibo no sea null
+            if (recibo != null) {
+                // Se asume que getMonto() devuelve un String que necesita limpieza
+                float montoNew = Float.parseFloat(recibo.getMonto().replace(",", "."));
+                System.out.printf("💳 Pago realizado por: %s | Monto: %.2f\n", alumno.getNombre(), montoNew);
+            } else {
+                System.out.println("⚠️ Proceso de pago abortado. Inscripción ya existe o pago falló.");
+            }
+            
+        } catch (CupoCompletoException e) {
+            System.err.println("❌ No se pudo inscribir al alumno: " + e.getMessage());
+        }
     }
 }
-        // 5️⃣ Crear alumno
-        Alumno alumno = cursosController.crearAlumnoEnPlataforma("Sofi", "sofiAGAY@mail.com", "abcd");
-
-        // 6️⃣ Inscribir alumno y pagar
-   // Archivo: Prueba.java
-
-// 6️⃣ Inscribir alumno y pagar
-try {
-    Recibo recibo = cursosController.inscribirYPagar(alumno, curso, 5000f, "TARJETA", 1);
-    
-    // 💡 CLAVE: Validar que el recibo no sea null antes de usarlo
-    if (recibo != null) {
-        float montoNew = Float.parseFloat(recibo.getMonto().replace(",", "."));
-        System.out.printf("💳 Pago realizado por: %s | Monto: %.2f\n", alumno.getNombre(), montoNew);
-    } else {
-        System.out.println("⚠️ No se generó recibo porque la inscripción ya existe o el pago falló.");
-    }
-    
-} catch (CupoCompletoException e) {
-    System.err.println("❌ No se pudo inscribir al alumno: " + e.getMessage());
-}
-// 7️⃣ Listar curs
-    }
-}
-
-        // 7️⃣ Listar curs
