@@ -8,13 +8,13 @@ import modelos.usuario.Usuario;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.print.Doc;
 
 public class UsuariosController {
 
     private final List<Alumno> alumnos;
     private final List<Docente> docentes;
     private final GestorBDDUsuario gestor;
+    private CursosController cursosController;
 
     public UsuariosController() {
         this.gestor = new GestorBDDUsuario();
@@ -26,9 +26,10 @@ public class UsuariosController {
         this.docentes.addAll(gestor.buscarTodosDocentes());
     }
 
-    // Archivo: UsuariosController.java
 
-    // Cambiamos a que devuelva Alumno
+    public void setCursosController(CursosController cursosController) {
+        this.cursosController = cursosController;
+    }
     public Alumno registrarAlumno(Alumno alumno) {
         // Guardar y sincronizar ID
         Alumno alumnoConId = gestor.guardarAlumno(alumno);
@@ -53,22 +54,45 @@ public Docente registrarDocente(Docente docente) {
 }
 
     public Usuario login(String email, String contrasenia) {
-        Docente docente = gestor.buscarDocentePorEmail(email);
-        if (docente != null && docente.getContrasenia().equals(contrasenia)) {
-            docente.login();
-            return docente;
-        }
+    // 1. Buscar el usuario básico en la BDD
+    Usuario usuario = gestor.buscarPorEmail(email);
+
+    if (usuario != null && usuario.getContrasenia().equals(contrasenia)) {
+        usuario.login();
         
-        // Si no es docente, buscar en usuarios (alumnos)
-        Usuario usuario = gestor.buscarPorEmail(email);
-        if (usuario != null && usuario.getContrasenia().equals(contrasenia)) {
-            usuario.login();
-            return usuario;
+        // 2. HIDRATACIÓN COMPLETA (Cursos y Calificaciones)
+        if (usuario instanceof Alumno alumno) {
+            if (this.cursosController != null) {
+                // ✅ CLAVE: Cargar Cursos y Calificaciones del Alumno
+                this.cursosController.cargarCursosInscritos(alumno); // Método de la respuesta anterior
+                this.cursosController.cargarCalificaciones(alumno); // Asume que este método existe
+            } else {
+                System.err.println("⚠️ Error: CursosController no fue inyectado.");
+            }
         }
-        
-        System.out.println("Credenciales incorrectas.");
+        return usuario;
+    } else {
+        System.out.println("❌ Credenciales inválidas.");
         return null;
     }
+}
+public Alumno buscarAlumnoPorId(int id) {
+    // 1. (Opcional) Buscar en la lista de objetos en memoria (si ya fue cargado al inicio)
+    for (Alumno a : alumnos) {
+        if (a.getId() == id) {
+            return a;
+        }
+    }
+    
+    // 2. Buscar en la BDD
+    Alumno alumno = gestor.buscarAlumnoPorId(id);
+    
+    if (alumno == null) {
+        System.out.println("⚠️ No se encontró alumno con ID: " + id);
+    }
+    
+    return alumno;
+}
 
     public void logout(Usuario usuario) {
         if (usuario != null) {

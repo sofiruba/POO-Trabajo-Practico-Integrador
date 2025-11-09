@@ -4,8 +4,6 @@ import modelos.cursos.Calificacion;
 import modelos.cursos.Curso;
 import modelos.cursos.Evaluacion;
 import modelos.cursos.Modulo;
-
-import modelos.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -20,10 +18,6 @@ public class Alumno extends Usuario {
         this.fechaInscripcion = fechaInscripcion;
     }
 
-    public void inscribirse(Curso curso) {
-        cursos.add(curso);
-        System.out.println(nombre + " se inscribió al curso " + curso.getNombre());
-    }
 
     public void rendirEvaluacion(Curso curso, Modulo modulo, Evaluacion evaluacion) {
        // System.out.println(nombre + " rindió la evaluación " + evaluacion.getNombre());
@@ -41,6 +35,11 @@ public class Alumno extends Usuario {
     
     public List<Calificacion> getCalificaciones() {
         return calificaciones;
+    }
+
+    public void inscribirse(Curso curso) {
+        this.cursos.add(curso);
+        System.out.println(nombre + " se inscribió al curso " + curso.getNombre());
     }
 
 }

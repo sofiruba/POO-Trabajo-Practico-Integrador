@@ -1,6 +1,4 @@
 package modelos.cursos;
-
-import java.time.LocalDate;
 import java.util.*;
 
 public abstract class Curso implements Comparable<Curso>{
@@ -11,6 +9,7 @@ public abstract class Curso implements Comparable<Curso>{
     private int cupo;
     private String estado;
     private Date fechaInicio;
+    private float precio;
     private Date fechaFin;
     private List<Modulo> modulos = new ArrayList<>();
 
@@ -18,12 +17,21 @@ public abstract class Curso implements Comparable<Curso>{
     public static final String ESTADO_PUBLICADO = "publicado";
     public static final String ESTADO_CERRADO = "cerrado";
 
-    public Curso( String nombre, String descripcion, int cupo) {
+    public Curso( String nombre, String descripcion, int cupo, float precio) {
 
         this.nombre = nombre;
+        this.precio = precio;
         this.descripcion = descripcion;
         this.cupo = cupo;
         this.estado = ESTADO_BORRADOR;
+    }
+    public float getPrecio() {
+        return precio;
+    }
+
+    // Setter (opcional, pero útil)
+    public void setPrecio(float precio) {
+        this.precio = precio;
     }
 
     public void abrirInscripcion() {

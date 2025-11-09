@@ -2,6 +2,8 @@ package data;
 
 import modelos.cursos.Evaluacion;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GestorBDDEvaluacion {
     // Usar la misma configuración de conexión que tus otros gestores
@@ -66,5 +68,62 @@ public class GestorBDDEvaluacion {
         System.err.println("❌ Error al buscar evaluación por nombre y módulo: " + e.getMessage());
     }
     return null;
+}
+
+public Evaluacion buscarEvaluacionPorId(int idEvaluacion) {
+    String sql = "SELECT idEvaluacion, nombre, descripcion, nota_maxima, idModulo FROM evaluacion WHERE idEvaluacion = ?";
+    
+    // Nota: Asumo que la conexión (URL, USER, PASSWORD) está definida.
+    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setInt(1, idEvaluacion);
+        
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                // 1. Reconstruir el objeto Evaluacion usando los datos de la BDD
+                Evaluacion evaluacion = new Evaluacion(
+                    rs.getString("nombre"),
+                    
+                    rs.getString("descripcion"),
+                    rs.getFloat("nota_maxima")
+                );
+                
+                // 2. 💡 CLAVE: Sincronizar el ID de la BDD
+                evaluacion.setIdEval(rs.getInt("idEvaluacion")); 
+                
+                return evaluacion;
+            }
+        }
+    } catch (SQLException e) {
+        System.err.println("❌ Error al buscar evaluación por ID: " + e.getMessage());
+    }
+    return null;
+}
+
+public List<Evaluacion> obtenerEvaluacionesPorModulo(int idModulo) {
+    List<Evaluacion> evaluaciones = new ArrayList<>();
+    String sql = "SELECT idEvaluacion, nombre, descripcion, nota_maxima FROM evaluacion WHERE idModulo = ?";
+
+    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setInt(1, idModulo);
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Evaluacion eval = new Evaluacion(
+                    rs.getString("nombre"),
+                    
+                    rs.getString("descripcion"),
+                    rs.getFloat("nota_maxima")
+                );
+                eval.setIdEval(rs.getInt("idEvaluacion"));
+                evaluaciones.add(eval);
+            }
+        }
+    } catch (SQLException e) {
+        System.err.println("❌ Error al obtener evaluaciones por módulo: " + e.getMessage());
+    }
+    return evaluaciones;
 }
 }

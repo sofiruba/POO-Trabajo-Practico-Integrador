@@ -1,5 +1,6 @@
 package data;
 
+import modelos.cursos.Evaluacion;
 import modelos.cursos.Modulo;
 import java.sql.*;
 import java.util.ArrayList;
@@ -8,8 +9,7 @@ import java.util.List;
 public class GestorBDDModulo {
     private Connection conn;
     
-    // Asumo que tienes una forma de obtener la conexión, similar a otros gestores
-    // Aquí utilizo la configuración de GestorBDDCurso como ejemplo:
+    private GestorBDDEvaluacion gestorEvaluacion;
     public GestorBDDModulo() {
         try {
             conn = DriverManager.getConnection(
@@ -20,6 +20,7 @@ public class GestorBDDModulo {
         } catch (SQLException e) {
             System.err.println("❌ Error al conectar con la BDD (Módulo): " + e.getMessage());
         }
+        this.gestorEvaluacion = new GestorBDDEvaluacion();
     }
 
     public Modulo guardar(Modulo modulo, int idCurso) {
@@ -47,36 +48,7 @@ public class GestorBDDModulo {
         return modulo;
     }
 
-    public List<Modulo> obtenerModulosPorCurso(int idCurso) {
-    List<Modulo> modulos = new ArrayList<>();
-    // La consulta busca todos los módulos que coincidan con el idCurso
-    String sql = "SELECT idModulo, titulo, contenido FROM modulo WHERE idCurso = ?";
-    
-    if (conn == null) {
-        System.err.println("❌ No hay conexión a la base de datos para obtener módulos.");
-        return modulos;
-    }
-    
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setInt(1, idCurso);
-        
-        try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                // Reconstruir el objeto Modulo
-                Modulo modulo = new Modulo(
-                    rs.getString("titulo"),
-                    rs.getString("contenido")
-                );
-                // ⚠️ CLAVE: Sincronizar el ID de la BDD
-                modulo.setIdModulo(rs.getInt("idModulo")); 
-                modulos.add(modulo);
-            }
-        }
-    } catch (SQLException e) {
-        System.err.println("❌ Error al obtener módulos por curso: " + e.getMessage());
-    }
-    return modulos;
-}
+   
 
 // Archivo: GestorBDDModulo.java
 
@@ -106,4 +78,40 @@ public Modulo buscarModuloPorTituloYCurso(String titulo, int idCurso) {
     }
     return null;
 }
+
+public List<Modulo> obtenerModulosPorCurso(int idCurso) {
+        List<Modulo> modulos = new ArrayList<>();
+        String sql = "SELECT idModulo, titulo, contenido FROM modulo WHERE idCurso = ?";
+        
+       try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idCurso);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int idModulo = rs.getInt("idModulo");
+                    
+                    // 1. Reconstruir el objeto Modulo
+                    Modulo modulo = new Modulo(
+                        rs.getString("titulo"),
+                        rs.getString("contenido")
+                    );
+                    modulo.setIdModulo(idModulo); 
+                    
+                    // 2. 💡 HIDRATACIÓN: Cargar las Evaluaciones de este Módulo
+                    List<Evaluacion> evaluaciones = gestorEvaluacion.obtenerEvaluacionesPorModulo(idModulo);
+                    
+                    // 3. Agregar las Evaluaciones al objeto Modulo
+                    for (Evaluacion e : evaluaciones) {
+                        modulo.agregarEvaluacion(e); 
+                    }
+
+                    modulos.add(modulo);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Error al obtener módulos por curso: " + e.getMessage());
+        }
+        return modulos;
+    }
 }

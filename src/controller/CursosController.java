@@ -13,7 +13,6 @@ import modelos.pago.PagoServicio;
 import modelos.pago.Recibo;
 import modelos.usuario.Alumno;
 import modelos.usuario.Docente;
-import modelos.usuario.Usuario;
 import exception.CupoCompletoException;
 
 public class CursosController {
@@ -52,7 +51,7 @@ public class CursosController {
     }
 
     // --- CREAR CURSO ---
-    public Curso crearCurso(Docente docente, String nombre, String desc, int cupo, String modalidad) {
+    public Curso crearCurso(Docente docente, String nombre, String desc, int cupo, float precio, String modalidad) {
         Curso cursoExistente = gestorCurso.buscarPorNombre(nombre);
             if (cursoExistente != null) {
                 System.out.println("✅ El curso '" + nombre + "' ya existe en la BDD (ID: " + cursoExistente.getIdCurso() + "). Usando el existente.");
@@ -62,12 +61,12 @@ public class CursosController {
 
         switch (modalidad.toUpperCase()) {
             case "ONLINE" -> {
-                nuevoCurso = new CursoOnline(nombre, desc, cupo, "https://plataforma-temp.com", "Zoom");
+                nuevoCurso = new CursoOnline(nombre, desc, cupo, precio, "https://plataforma-temp.com", "Zoom");
                 
                 nuevoCurso=gestorCurso.guardar(nuevoCurso, docente);
             }
             case "PRESENCIAL" -> {
-                nuevoCurso = new CursoPresencial(nombre, desc, cupo, "Aula 101", "Av. Siempre Viva 123");
+                nuevoCurso = new CursoPresencial(nombre, desc, cupo, precio, "Aula 101", "Av. Siempre Viva 123");
                 nuevoCurso=gestorCurso.guardar(nuevoCurso, docente);
             }
             default -> {
@@ -102,6 +101,9 @@ public class CursosController {
         Inscripcion nuevaInscripcion = new Inscripcion(alumno, curso);
         
         nuevaInscripcion=gestorInscripciones.guardar(nuevaInscripcion);
+        if (nuevaInscripcion != null) {
+        alumno.inscribirse(curso); // ✅ Agrega el curso a la lista interna del Alumno
+    }
 
         System.out.println("📝 Alumno " + alumno.getNombre() + " preinscripto en " + curso.getNombre());
         return nuevaInscripcion;
@@ -270,10 +272,7 @@ public Evaluacion agregarEvaluacion(Modulo modulo, String nombre, float notaMaxi
     }
 }
 
-// Archivo: CursosController.java (Método registrarCalificacion)
 
-
-// ... (Necesitas inicializar GestorBDDCalificacion en el constructor) ...
 
 public Calificacion registrarCalificacion(Docente docente, Alumno alumno, Curso curso, Evaluacion evaluacion, float nota, String comentario) {
     
@@ -284,13 +283,10 @@ public Calificacion registrarCalificacion(Docente docente, Alumno alumno, Curso 
         return null; 
     }
     
-    // 2. Lógica POO: El docente crea la Calificación (instancia en memoria)
     Calificacion calificacion = docente.calificar(alumno, curso, evaluacion, nota, comentario);
     
     if (calificacion == null) return null;
 
-    // 3. Persistir en la base de datos y sincronizar ID
-    // Asumimos que gestorCalificacion.guardarCalificacion retorna el objeto sincronizado
     Calificacion calificacionSincronizada = gestorCalificacion.guardarCalificacion(calificacion); 
     
     if (calificacionSincronizada != null) {
@@ -301,6 +297,92 @@ public Calificacion registrarCalificacion(Docente docente, Alumno alumno, Curso 
     }
     
     return calificacionSincronizada;
+}
+
+public void cargarCursosInscritos(Alumno alumno) {
+    if (alumno == null) return;
+    
+    // 1. Obtener los IDs de cursos del alumno desde la tabla 'inscripcion'
+    List<Integer> idsCursosInscritos = gestorInscripciones.obtenerCursosInscritosIds(alumno.getId());
+    
+    // 2. Limpiar la lista actual (solo si vas a re-cargar el mismo objeto)
+    alumno.getCursos().clear(); 
+    
+    // 3. Buscar el objeto Curso completo por cada ID y agregarlo al Alumno
+    for (Integer idCurso : idsCursosInscritos) {
+        // Usamos el gestor de cursos para obtener el objeto completo
+        Curso curso = gestorCurso.buscarCursoPorId(idCurso); 
+        if (curso != null) {
+            // Agregamos directamente a la lista del Alumno
+            alumno.getCursos().add(curso); 
+        }
+    }
+    
+    // Aquí también iría la carga de calificaciones si tienes un Gestor para ellas.
+    // Ej: gestorCalificaciones.cargarCalificaciones(alumno);
+
+    System.out.println("🎓 Cursos cargados para " + alumno.getNombre() + ": " + alumno.getCursos().size());
+}
+
+public void cargarCalificaciones(Alumno alumno) {
+    if (alumno == null) return;
+    
+    // 1. Obtener la data básica desde el gestor de Calificación
+    List<Map.Entry<Integer, Float>> calificacionesBase = gestorCalificacion.obtenerCalificacionesBase(alumno.getId());
+    
+    // 2. Limpiar la lista de calificaciones actual del Alumno antes de cargar
+    alumno.getCalificaciones().clear(); 
+    
+    // 3. Reconstruir cada objeto Calificacion
+    for (Map.Entry<Integer, Float> entry : calificacionesBase) {
+        int idEvaluacion = entry.getKey();
+        float nota = entry.getValue();
+        
+        // 3.1. Buscar la Evaluación completa (y, por ende, su Módulo y Curso)
+        // Nota: Asumo que tienes un método que busca la Evaluación completa por ID
+        // y que este método puede inferir el Módulo y Curso. (Simplificación del flujo POO)
+        
+        Evaluacion evaluacion = gestorEvaluacion.buscarEvaluacionPorId(idEvaluacion); // Asumo que este método existe
+        
+        if (evaluacion != null) {
+            // Nota: Aquí se necesitaría lógica compleja para saber el CURSO y el COMENTARIO.
+            // Por simplicidad, asumiremos que el primer curso inscrito es el curso asociado.
+            
+            Curso cursoAsociado = alumno.getCursos().stream().findFirst().orElse(null); 
+            
+            if (cursoAsociado != null) {
+                // Creamos la instancia de Calificación
+                Calificacion calificacion = new Calificacion(
+                    alumno, 
+                    cursoAsociado, // Usamos el curso asociado
+                    evaluacion, 
+                    nota, 
+                    "Cargada desde BDD" // Asumo un comentario por defecto
+                );
+                
+                // 3.2. Agregar al objeto Alumno en memoria
+                alumno.agregarCalificacion(calificacion);
+            }
+        }
+    }
+    
+    System.out.println("⭐ Calificaciones cargadas para " + alumno.getNombre() + ": " + alumno.getCalificaciones().size());
+}
+
+public List<Alumno> obtenerAlumnosInscritos(int idCurso) {
+    List<Integer> idsAlumnos = gestorInscripciones.obtenerAlumnosInscritosIds(idCurso);
+    List<Alumno> alumnos = new ArrayList<>();
+    
+    for (Integer id : idsAlumnos) {
+        // Asumo que tienes un método en UsuariosController o GestorBDDUsuario:
+        // public Alumno buscarAlumnoPorId(int id)
+        Alumno alumno = usuariosController.buscarAlumnoPorId(id); // ⚠️ Asumo que este método existe o lo creas.
+        if (alumno != null) {
+            alumnos.add(alumno);
+        }
+    }
+    System.out.println("Cargados " + alumnos.size() + " alumnos inscritos para el curso ID " + idCurso);
+    return alumnos;
 }
     // --- GETTERS ---
     public List<Alumno> getAlumnos() { return alumnos; }

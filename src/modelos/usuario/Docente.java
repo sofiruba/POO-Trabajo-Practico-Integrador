@@ -17,8 +17,8 @@ public class Docente extends Usuario {
         this.especialidad = especialidad;
     }
 
-    public Curso crearCurso(String nombre, String desc, int cupo, String linkPlat, String plataforma) {
-        Curso curso = new CursoOnline(nombre, desc, cupo, linkPlat, plataforma);
+    public Curso crearCurso(String nombre, String desc, int cupo, float precio, String linkPlat, String plataforma) {
+        Curso curso = new CursoOnline(nombre, desc, cupo, precio, linkPlat, plataforma);
         cursos.add(curso);
         return curso;
     }

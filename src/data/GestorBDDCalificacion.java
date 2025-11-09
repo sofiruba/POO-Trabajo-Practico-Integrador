@@ -3,6 +3,10 @@ package data;
 
 import modelos.cursos.*;
 import java.sql.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class GestorBDDCalificacion {
     
@@ -67,5 +71,32 @@ public boolean existeCalificacion(int idAlumno, int idEvaluacion) {
         System.err.println("❌ Error al verificar la existencia de calificación: " + e.getMessage());
     }
     return false;
+}
+
+public List<Map.Entry<Integer, Float>> obtenerCalificacionesBase(int idAlumno) {
+    // Usamos Map.Entry para devolver el idEvaluacion y la nota
+    List<Map.Entry<Integer, Float>> calificacionesBase = new ArrayList<>();
+    
+    // idEvaluacion es para saber qué evaluacion calificamos, nota es el resultado
+    String sql = "SELECT idEvaluacion, idCurso, nota, comentario FROM calificacion WHERE idUsuario = ?"; 
+    
+    try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD); 
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setInt(1, idAlumno);
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                int idEvaluacion = rs.getInt("idEvaluacion");
+                float nota = rs.getFloat("nota");
+                // Nota: Podríamos devolver más campos (idCurso, comentario) si fueran necesarios aquí.
+                
+                // Creamos una entrada simple con el ID de la evaluación y la nota
+                calificacionesBase.add(new AbstractMap.SimpleEntry<>(idEvaluacion, nota));
+            }
+        }
+    } catch (SQLException e) {
+        System.err.println("❌ Error al obtener calificaciones base: " + e.getMessage());
+    }
+    return calificacionesBase;
 }
 }

@@ -5,10 +5,9 @@ public class CursoOnline extends Curso {
     private String linkPlataforma;
     private String plataforma;
 
-    public CursoOnline( String nombre, String descripcion, int cupo,
+    public CursoOnline( String nombre, String descripcion, int cupo, float precio,
                        String linkPlataforma, String plataforma) {
-        // Llamada al constructor de la clase padre (core.Curso)
-        super( nombre, descripcion, cupo);
+        super( nombre, descripcion, cupo, precio);
         this.linkPlataforma = linkPlataforma;
         this.plataforma = plataforma;
     }

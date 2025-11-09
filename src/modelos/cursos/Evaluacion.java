@@ -1,6 +1,5 @@
 package modelos.cursos;
 
-import java.util.Date;
 
 public class Evaluacion {
 

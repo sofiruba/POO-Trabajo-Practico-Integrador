@@ -5,9 +5,9 @@ public class CursoPresencial extends Curso {
     private String aula;
     private String direccion;
 
-    public CursoPresencial(String nombre, String descripcion, int cupo,
+    public CursoPresencial(String nombre, String descripcion, int cupo, float precio,
                            String aula, String direccion) {
-        super( nombre, descripcion, cupo);
+        super(nombre, descripcion, cupo, precio);
         this.aula = aula;
         this.direccion = direccion;
     }
