@@ -77,4 +77,33 @@ public class GestorBDDModulo {
     }
     return modulos;
 }
+
+// Archivo: GestorBDDModulo.java
+
+public Modulo buscarModuloPorTituloYCurso(String titulo, int idCurso) {
+    // La consulta busca un módulo que coincida tanto en título como en idCurso
+    String sql = "SELECT idModulo, titulo, contenido FROM modulo WHERE titulo = ? AND idCurso = ?";
+    
+    // Asumo que la conexión (conn) no es nula.
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, titulo);
+        ps.setInt(2, idCurso);
+        
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                // Reconstruir el objeto Modulo si se encuentra
+                Modulo modulo = new Modulo(
+                    rs.getString("titulo"),
+                    rs.getString("contenido")
+                );
+                // Sincronizar el ID de la BDD
+                modulo.setIdModulo(rs.getInt("idModulo")); 
+                return modulo;
+            }
+        }
+    } catch (SQLException e) {
+        System.err.println("❌ Error al buscar módulo por título y curso: " + e.getMessage());
+    }
+    return null;
+}
 }

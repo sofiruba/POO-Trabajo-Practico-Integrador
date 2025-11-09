@@ -195,6 +195,12 @@ public Docente crearDocenteEnPlataforma(String nombre, String email, String cont
             System.err.println("❌ Error: No se puede agregar módulo. El curso no existe o no tiene ID de BDD.");
             return null;
         }
+        Modulo moduloExistente = gestorModulo.buscarModuloPorTituloYCurso(titulo, curso.getIdCurso());
+    
+    if (moduloExistente != null) {
+        System.err.println("❌ ERROR: El módulo '" + titulo + "' ya existe para el curso " + curso.getNombre() + ".");
+        return moduloExistente; // Devolvemos el módulo existente en lugar de crear uno nuevo.
+    }
 
         // 1. Crear el objeto Java
         Modulo nuevoModulo = new Modulo(titulo, contenido);
