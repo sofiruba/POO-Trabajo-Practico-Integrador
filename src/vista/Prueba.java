@@ -4,6 +4,7 @@ import modelos.pago.*;
 import modelos.usuario.Alumno;
 import modelos.usuario.Docente;
 import modelos.cursos.Curso;
+import modelos.cursos.Evaluacion;
 import modelos.cursos.Modulo;
 import exception.CupoCompletoException;
 
@@ -29,6 +30,28 @@ public class Prueba {
         Modulo modulo1 = cursosController.agregarModulo(curso, "Introducción a Java", "Variables, tipos de datos y estructuras de control.");
         Modulo modulo2 = cursosController.agregarModulo(curso, "Programación Orientada a Objetos", "Clases, objetos, herencia y polimorfismo.");
 
+        if (modulo1 != null) {
+            System.out.println("\n--- Creación de Evaluaciones por Docente ---");
+            // Evaluación para Módulo 1: Introducción
+            Evaluacion eval1 = cursosController.agregarEvaluacion(
+                modulo1, 
+                "Quiz Inicial", 
+                10.0f, 
+                "Cuestionario sobre variables y bucles básicos."
+            );
+            System.out.printf("Docente %s creó la Evaluación: %s\n", docente.getNombre(), eval1.getNombre());
+        }
+
+        if (modulo2 != null) {
+            // Evaluación para Módulo 2: POO
+            Evaluacion eval2 = cursosController.agregarEvaluacion(
+                modulo2, 
+                "Proyecto Final POO", 
+                100.0f, 
+                "Implementar un sistema con herencia y polimorfismo."
+            );
+            System.out.printf("Docente %s creó la Evaluación: %s\n", docente.getNombre(), eval2.getNombre());
+        }
         System.out.println("\n--- Módulos del curso " + curso.getNombre() + " ---");
 
 List<Modulo> listaModulos = cursosController.obtenerModulosDeCurso(curso);

@@ -2,11 +2,13 @@ package controller;
 
 import java.util.*;
 import data.GestorBDDCurso;
+import data.GestorBDDEvaluacion;
 import data.GestorBDDInscripcion;
 import data.GestorBDDModulo;
 import modelos.cursos.Curso;
 import modelos.cursos.CursoOnline;
 import modelos.cursos.CursoPresencial;
+import modelos.cursos.Evaluacion;
 import modelos.cursos.Modulo;
 import modelos.inscripcion.Inscripcion;
 import modelos.pago.PagoServicio;
@@ -28,6 +30,7 @@ public class CursosController {
     private final GestorBDDInscripcion gestorInscripciones;
     private UsuariosController usuariosController;
     private final GestorBDDModulo gestorModulo;
+    private final GestorBDDEvaluacion gestorEvaluacion;
 
     public CursosController(PagoServicio pagoServicio, UsuariosController usuariosController) {
         this.pagoServicio = pagoServicio;
@@ -35,6 +38,7 @@ public class CursosController {
         this.gestorCurso = new GestorBDDCurso();
         this.gestorInscripciones = new GestorBDDInscripcion();
         this.gestorModulo = new GestorBDDModulo();
+        this.gestorEvaluacion = new GestorBDDEvaluacion();
 
         this.alumnos = new ArrayList<>();
         this.docentes = new ArrayList<>();
@@ -235,6 +239,35 @@ public Docente crearDocenteEnPlataforma(String nombre, String email, String cont
     System.out.println("Cargados " + modulosBdd.size() + " módulos para el curso '" + curso.getNombre() + "'.");
     
     return modulosBdd;
+}
+
+public Evaluacion agregarEvaluacion(Modulo modulo, String nombre, float notaMaxima, String descripcion) {
+    if (modulo == null || modulo.getIdModulo() == 0) {
+        System.err.println("❌ Error: No se puede agregar evaluación. El módulo no existe o no tiene ID de BDD.");
+        return null;
+    }
+    Evaluacion evaluacionExistente = gestorEvaluacion.buscarEvaluacionPorNombreYModulo(nombre, modulo.getIdModulo());
+    
+    if (evaluacionExistente != null) {
+        System.err.println("❌ ERROR: La evaluación '" + nombre + "' ya existe para el módulo " + modulo.getTitulo() + ".");
+        return evaluacionExistente; // Devolvemos la evaluación existente en lugar de crear una nueva.
+    }
+    
+    // 1. Crear el objeto Java
+    Evaluacion nuevaEvaluacion = new Evaluacion(nombre, descripcion, notaMaxima);
+    
+    // 2. Persistir y sincronizar el ID
+    nuevaEvaluacion = gestorEvaluacion.guardar(nuevaEvaluacion, modulo.getIdModulo());
+    
+    // 3. Agregar al objeto Modulo en memoria
+    if (nuevaEvaluacion != null && nuevaEvaluacion.getIdEval() > 0) {
+        modulo.agregarEvaluacion(nuevaEvaluacion); // Asumiendo que Modulo.java tiene agregarEvaluacion(Evaluacion)
+        System.out.println("✅ Evaluación '" + nombre + "' agregada al módulo '" + modulo.getTitulo() + "'.");
+        return nuevaEvaluacion;
+    } else {
+        System.err.println("❌ No se pudo persistir la evaluación.");
+        return null;
+    }
 }
     // --- GETTERS ---
     public List<Alumno> getAlumnos() { return alumnos; }
