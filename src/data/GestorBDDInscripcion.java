@@ -20,8 +20,6 @@ public class GestorBDDInscripcion {
         }
     }
 
-    // Archivo: GestorBDDInscripcion.java
-
 public Inscripcion guardar(Inscripcion inscripcion) {
     String sql = "INSERT INTO inscripcion (idUsuario, idCurso, fecha, estado) VALUES (?, ?, ?, ?)";
     try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { // 💡 CLAVE
@@ -31,7 +29,6 @@ public Inscripcion guardar(Inscripcion inscripcion) {
         ps.setString(4, inscripcion.getEstado());
         ps.executeUpdate();
 
-        // 2. Recuperar el ID generado por la BDD (AUTO_INCREMENT)
         try (ResultSet rs = ps.getGeneratedKeys()) {
             if (rs.next()) {
                 int idGenerado = rs.getInt(1);

@@ -41,7 +41,7 @@ public class UsuariosController {
 
 public Docente registrarDocente(Docente docente) {
     // 1. Guardar y sincronizar ID en la base de datos
-    Docente docenteConId = gestor.guardarDocente(docente); // 👈 Asume que GestorBDDUsuario.guardarDocente devuelve Docente
+    Docente docenteConId = gestor.guardarDocente(docente); 
     
     // 2. Agregamos el objeto sincronizado a la lista en memoria
     if (docenteConId != null) {
@@ -63,9 +63,9 @@ public Docente registrarDocente(Docente docente) {
         // 2. HIDRATACIÓN COMPLETA (Cursos y Calificaciones)
         if (usuario instanceof Alumno alumno) {
             if (this.cursosController != null) {
-                // ✅ CLAVE: Cargar Cursos y Calificaciones del Alumno
-                this.cursosController.cargarCursosInscritos(alumno); // Método de la respuesta anterior
-                this.cursosController.cargarCalificaciones(alumno); // Asume que este método existe
+                // cargar cursos inscritos y calificaciones q esten en la bdd
+                this.cursosController.cargarCursosInscritos(alumno); 
+                this.cursosController.cargarCalificaciones(alumno); 
             } else {
                 System.err.println("⚠️ Error: CursosController no fue inyectado.");
             }

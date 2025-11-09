@@ -23,39 +23,33 @@ public class GestorBDDCurso {
             System.out.println("❌ Error de conexión: " + e.getMessage());
         }
     }
-
-// Archivo: GestorBDDCurso.java (Método guardar)
-
 public Curso guardar(Curso nuevoCurso, Docente docente) {
-    // 1. Sentencia SQL con las 11 columnas a insertar
+    
     String sql = """
     INSERT INTO curso 
     (nombre, descripcion, cupo, precio, estado, fecha_inicio, fecha_fin, modalidad, 
      link_plataforma, plataforma, aula, direccion, idDocente) 
     VALUES (?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?)
-    """; // ✅ CLAVE: 11 parámetros
+    """; 
 
-    // Nota: Si usas GestorDePersistencia, cambia DriverManager.getConnection por tu método
     try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD); 
-         // 2. Pedimos las claves generadas (idCurso)
+        
          PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) { 
 
-        // 3. Setear los 11 parámetros
         ps.setString(1, nuevoCurso.getNombre());        // Param 1 (nombre)
         ps.setString(2, nuevoCurso.getDescripcion());   // Param 2 (descripcion)
         ps.setInt(3, nuevoCurso.getCupo());     
         ps.setFloat(4, nuevoCurso.getPrecio());        // Param 3 (precio)
 
         ps.setString(5, "inactivo");
-        // Manejo de fechas (Parámetros 4 y 5)
+       
         ps.setDate(6, nuevoCurso.getFechaInicio() != null ? new java.sql.Date(nuevoCurso.getFechaInicio().getTime()) : null);
         ps.setDate(7, nuevoCurso.getFechaFin() != null ? new java.sql.Date(nuevoCurso.getFechaFin().getTime()) : null);
 
-        // Manejo de modalidad (Parámetros 6 al 10)
         if (nuevoCurso instanceof CursoOnline online) {
             ps.setString(8, "Online");
             ps.setString(9, online.getLinkPlataforma());
-            ps.setString(10, online.getPlataforma()); // ✅ Parámetro 8: Plataforma
+            ps.setString(10, online.getPlataforma()); 
             ps.setNull(11, Types.VARCHAR); // aula
             ps.setNull(12, Types.VARCHAR); // direccion
         } else if (nuevoCurso instanceof CursoPresencial presencial) {
@@ -75,12 +69,10 @@ public Curso guardar(Curso nuevoCurso, Docente docente) {
             ps.setNull(12, Types.VARCHAR);
         }
         
-        // 4. Clave Foránea idDocente (Parámetro 11)
-        ps.setInt(13, docente.getId()); // ✅ Parámetro 12
+        ps.setInt(13, docente.getId()); 
 
         ps.executeUpdate();
 
-        // 5. Sincronización del ID
         try (ResultSet rs = ps.getGeneratedKeys()) {
             if (rs.next()) {
                 int idGenerado = rs.getInt(1);
@@ -146,11 +138,11 @@ public Curso guardar(Curso nuevoCurso, Docente docente) {
             String descripcion = rs.getString("descripcion");
             int cupo = rs.getInt("cupo");
             float precio = rs.getFloat("precio");
-            int idCursoBdd = rs.getInt("idCurso"); // ✅ CLAVE: Capturamos el ID real
+            int idCursoBdd = rs.getInt("idCurso"); 
 
             if ("ONLINE".equalsIgnoreCase(modalidad)) {
                 String link = rs.getString("link_plataforma");
-                String plataforma = rs.getString("plataforma"); // Aseguramos que se captura 'plataforma'
+                String plataforma = rs.getString("plataforma"); 
 
                 CursoOnline c = new CursoOnline(nombre, descripcion, cupo, precio, link, plataforma);
                 
@@ -232,9 +224,7 @@ public Curso buscarCursoPorId(int idCurso) {
             String nombre = rs.getString("nombre");
             String descripcion = rs.getString("descripcion");
             int cupo = rs.getInt("cupo");
-            float precio = rs.getFloat("precio"); // Asumo que ya agregaste 'precio'
-            
-            // Creación del objeto Curso (debes adaptar esta lógica)
+            float precio = rs.getFloat("precio"); 
             if ("Online".equalsIgnoreCase(modalidad)) {
                 String link = rs.getString("link_plataforma");
                 String plataforma = rs.getString("plataforma");

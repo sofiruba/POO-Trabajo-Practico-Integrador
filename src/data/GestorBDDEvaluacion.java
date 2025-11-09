@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GestorBDDEvaluacion {
-    // Usar la misma configuración de conexión que tus otros gestores
+    
     private static final String URL = "jdbc:mysql://localhost:3306/plataforma_cursos";
     private static final String USER = "root";
     private static final String PASSWORD = "mysql"; 
@@ -42,8 +42,7 @@ public class GestorBDDEvaluacion {
     public Evaluacion buscarEvaluacionPorNombreYModulo(String nombre, int idModulo) {
     // La consulta busca una evaluación que coincida en nombre y en idModulo
     String sql = "SELECT idEvaluacion, nombre, descripcion, nota_maxima FROM evaluacion WHERE nombre = ? AND idModulo = ?";
-    
-    // Asumo que la conexión (conn) no es nula.
+   
     try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
          PreparedStatement ps = conn.prepareStatement(sql)) {
         
@@ -52,14 +51,12 @@ public class GestorBDDEvaluacion {
         
         try (ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
-                // Reconstruir el objeto Evaluacion si se encuentra
                 Evaluacion evaluacion = new Evaluacion(
                     rs.getString("nombre"),
                 
                     rs.getString("descripcion"),
                     rs.getFloat("nota_maxima")
                 );
-                // Sincronizar el ID de la BDD
                 evaluacion.setIdEval(rs.getInt("idEvaluacion")); 
                 return evaluacion;
             }
@@ -73,7 +70,6 @@ public class GestorBDDEvaluacion {
 public Evaluacion buscarEvaluacionPorId(int idEvaluacion) {
     String sql = "SELECT idEvaluacion, nombre, descripcion, nota_maxima, idModulo FROM evaluacion WHERE idEvaluacion = ?";
     
-    // Nota: Asumo que la conexión (URL, USER, PASSWORD) está definida.
     try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
          PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -81,7 +77,6 @@ public Evaluacion buscarEvaluacionPorId(int idEvaluacion) {
         
         try (ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
-                // 1. Reconstruir el objeto Evaluacion usando los datos de la BDD
                 Evaluacion evaluacion = new Evaluacion(
                     rs.getString("nombre"),
                     

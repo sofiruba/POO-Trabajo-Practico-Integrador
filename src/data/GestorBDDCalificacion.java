@@ -47,15 +47,10 @@ public class GestorBDDCalificacion {
         }
     }
 
-    // Archivo: GestorBDDCalificacion.java (Agregar el nuevo método)
-
-
-
 public boolean existeCalificacion(int idAlumno, int idEvaluacion) {
     // La consulta verifica si ya hay una calificación registrada para este par
     String sql = "SELECT COUNT(*) FROM calificacion WHERE idUsuario = ? AND idEvaluacion = ?";
     
-    // Asumo que la conexión está manejada (DriverManager.getConnection dentro de try-with-resources)
     try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD); 
          PreparedStatement ps = conn.prepareStatement(sql)) {
         
@@ -77,7 +72,6 @@ public List<Map.Entry<Integer, Float>> obtenerCalificacionesBase(int idAlumno) {
     // Usamos Map.Entry para devolver el idEvaluacion y la nota
     List<Map.Entry<Integer, Float>> calificacionesBase = new ArrayList<>();
     
-    // idEvaluacion es para saber qué evaluacion calificamos, nota es el resultado
     String sql = "SELECT idEvaluacion, idCurso, nota, comentario FROM calificacion WHERE idUsuario = ?"; 
     
     try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD); 
@@ -88,9 +82,6 @@ public List<Map.Entry<Integer, Float>> obtenerCalificacionesBase(int idAlumno) {
             while (rs.next()) {
                 int idEvaluacion = rs.getInt("idEvaluacion");
                 float nota = rs.getFloat("nota");
-                // Nota: Podríamos devolver más campos (idCurso, comentario) si fueran necesarios aquí.
-                
-                // Creamos una entrada simple con el ID de la evaluación y la nota
                 calificacionesBase.add(new AbstractMap.SimpleEntry<>(idEvaluacion, nota));
             }
         }

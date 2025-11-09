@@ -37,7 +37,7 @@ public class GestorBDDModulo {
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
                     int idGenerado = rs.getInt(1);
-                    modulo.setIdModulo(idGenerado); // Necesitas este setter en Modulo.java
+                    modulo.setIdModulo(idGenerado); 
                 }
             }
             System.out.println("💾 Módulo '" + modulo.getTitulo() + "' guardado correctamente.");
@@ -47,16 +47,10 @@ public class GestorBDDModulo {
         }
         return modulo;
     }
-
-   
-
-// Archivo: GestorBDDModulo.java
-
 public Modulo buscarModuloPorTituloYCurso(String titulo, int idCurso) {
     // La consulta busca un módulo que coincida tanto en título como en idCurso
     String sql = "SELECT idModulo, titulo, contenido FROM modulo WHERE titulo = ? AND idCurso = ?";
     
-    // Asumo que la conexión (conn) no es nula.
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
         ps.setString(1, titulo);
         ps.setInt(2, idCurso);
@@ -98,7 +92,7 @@ public List<Modulo> obtenerModulosPorCurso(int idCurso) {
                     );
                     modulo.setIdModulo(idModulo); 
                     
-                    // 2. 💡 HIDRATACIÓN: Cargar las Evaluaciones de este Módulo
+                    // 2. Obtener las Evaluaciones asociadas a este Módulo
                     List<Evaluacion> evaluaciones = gestorEvaluacion.obtenerEvaluacionesPorModulo(idModulo);
                     
                     // 3. Agregar las Evaluaciones al objeto Modulo

@@ -52,7 +52,6 @@ public class Prueba {
             }
         }
 
-        // 2️⃣ Menú de Navegación por Rol
         if (usuarioLogueado instanceof Alumno) {
             menuAlumno((Alumno) usuarioLogueado);
         } else if (usuarioLogueado instanceof Docente) {
@@ -62,10 +61,6 @@ public class Prueba {
         System.out.println("\n👋 Gracias por usar la plataforma.");
         scanner.close();
     }
-
-    // ===================================
-    // METODOS DE AUTENTICACION
-    // ===================================
 
     private static Usuario loginUsuario() {
         System.out.println("\n--- LOGIN ---");
@@ -98,21 +93,17 @@ public class Prueba {
         } else {
             System.out.println("❌ Falló el registro (el email ya está en uso o error de BDD).");
         }
-        // Nota: Devolvemos null para forzar un login tras el registro
         return null; 
     }
 
-    // ===================================
-    // MENÚ DE DOCENTE
-    // ===================================
 
 private static void menuDocente(Docente docente) {
         String opcion = "";
         while (!opcion.equals("0")) {
             System.out.println("\n--- MENÚ DOCENTE (" + docente.getNombre() + ") ---");
-            System.out.println("1. Crear Nuevo Curso"); // Solo crea el curso
-            System.out.println("2. Agregar Módulo a un Curso"); // Crea el módulo
-            System.out.println("3. Agregar Evaluación a un Módulo"); // Crea la evaluación
+            System.out.println("1. Crear Nuevo Curso"); 
+            System.out.println("2. Agregar Módulo a un Curso"); 
+            System.out.println("3. Agregar Evaluación a un Módulo"); 
             System.out.println("4. Ver Mis Cursos");
             System.out.println("5. Calificar Alumno (Simulación)");
             System.out.println("0. Cerrar Sesión");
@@ -121,15 +112,12 @@ private static void menuDocente(Docente docente) {
 
             switch (opcion) {
                 case "1":
-                    // 1. CREAR CURSO
                     crearCursoInteractivo(docente);
                     break;
                 case "2":
-                    // 2. AGREGAR MÓDULO (Requiere seleccionar Curso)
                     agregarModuloACurso(docente);
                     break;
                 case "3":
-                    // 3. AGREGAR EVALUACIÓN (Requiere seleccionar Curso y Módulo)
                     agregarEvaluacionAModulo(docente);
                     break;
                 case "4":
@@ -209,15 +197,12 @@ private static void menuDocente(Docente docente) {
                 return;
             }
 
-            // El resto de la lógica de crear la evaluación
             agregarEvaluacionInteractivo(modulo);
             
         } catch (NumberFormatException e) {
             System.out.println("❌ Entrada inválida. Debe ser un número.");
         }
     }
-
-    // --- MÉTODOS AUXILIARES (SIMPLIFICADOS) ---
 
     private static void verCursosDocente() {
         System.out.println("\n--- CURSOS EN EL SISTEMA ---");
@@ -333,18 +318,12 @@ private static void menuDocente(Docente docente) {
     }
 }
 
-    // ===================================
-    // MENÚ DE ALUMNO
-    // ===================================
-
-    // Archivo: MainApp.java (Método menuAlumno)
-
 private static void menuAlumno(Alumno alumno) {
     String opcion = "";
     while (!opcion.equals("0")) {
         System.out.println("\n--- MENÚ ALUMNO (" + alumno.getNombre() + ") ---");
         System.out.println("1. Ver Cursos Disponibles e Inscribirse");
-        System.out.println("2. Ver Mis Inscripciones / Calificaciones"); // Cambiado para reflejar el contenido
+        System.out.println("2. Ver Mis Inscripciones / Calificaciones"); 
         System.out.println("3. Rendir Evaluación"); 
         System.out.println("0. Cerrar Sesión");
         System.out.print("Seleccione una opción: ");
@@ -355,10 +334,10 @@ private static void menuAlumno(Alumno alumno) {
                 inscribirAlumnoInteractivo(alumno);
                 break;
             case "2":
-                verMisInscripciones(alumno); // Usamos la función de listado
+                verMisInscripciones(alumno);
                 break;
             case "3":
-                rendirYVerCalificaciones(alumno); // Usamos la función de rendir/ver
+                rendirYVerCalificaciones(alumno); 
                 break;
             case "0":
                 usuariosController.logout(alumno);
@@ -445,11 +424,11 @@ private static void menuAlumno(Alumno alumno) {
         return cursosController.agregarEvaluacion(modulo, nombre, notaMax, desc);
     }
 
-    // Archivo: MainApp.java (Método verMisInscripciones corregido)
+    
 
 private static void verMisInscripciones(Alumno alumno) {
     String opcion = "";
-    while (!opcion.equals("0")) { // Bucle principal para la navegación
+    while (!opcion.equals("0")) { 
         
         System.out.println("\n--- MIS INSCRIPCIONES ---");
         List<Curso> misCursos = alumno.getCursos();
@@ -496,7 +475,6 @@ private static void verMisInscripciones(Alumno alumno) {
                 continue; // Vuelve al inicio del bucle
             }
 
-            // 4. Llamar a la función de navegación de contenido
             navegarContenido(cursoSeleccionado); 
 
         } catch (NumberFormatException e) {
@@ -507,7 +485,6 @@ private static void verMisInscripciones(Alumno alumno) {
 private static void navegarContenido(Curso curso) {
     System.out.println("\n--- ESTRUCTURA ACADÉMICA de " + curso.getNombre() + " ---");
     
-    // Cargar Módulos y Evaluaciones (Asegurar la hidratación)
     List<Modulo> modulos = cursosController.obtenerModulosDeCurso(curso);
     
     if (modulos.isEmpty()) {
@@ -519,7 +496,6 @@ private static void navegarContenido(Curso curso) {
         Modulo modulo = modulos.get(i);
         System.out.printf("\n📘 MÓDULO %d: %s\n", i + 1, modulo.getTitulo());
         
-        // Ver Evaluaciones dentro del Módulo
         List<Evaluacion> evaluaciones = modulo.getEvaluaciones();
         if (evaluaciones.isEmpty()) {
             System.out.println("   (No hay evaluaciones cargadas para este módulo)");
@@ -531,27 +507,24 @@ private static void navegarContenido(Curso curso) {
         }
     }
     System.out.println("\nPresione ENTER para volver...");
-    scanner.nextLine(); // Espera a que el usuario presione Enter para volver al menú de Mis Cursos.
+    scanner.nextLine();
 }
 
 private static void rendirYVerCalificaciones(Alumno alumno) {
     System.out.println("\n--- RENDIR / VER NOTAS ---");
 
-    // Lógica para RENDICIÓN (Simulación)
     System.out.println("1. Rendir una Evaluación (Simulación)");
     System.out.println("2. Ver mi Historial de Calificaciones");
     System.out.print("Seleccione una opción: ");
     String opcion = scanner.nextLine();
 
     if (opcion.equals("1")) {
-        // Simulación: Buscamos la primera inscripción activa y la primera evaluación
         if (alumno.getCursos().isEmpty()) {
             System.out.println("Debes estar inscrito en un curso para rendir.");
             return;
         }
         Curso curso = alumno.getCursos().get(0);
         
-        // Simulación de encontrar la primera evaluación del primer módulo
         List<Modulo> modulos = cursosController.obtenerModulosDeCurso(curso);
         if (modulos.isEmpty() || modulos.get(0).getEvaluaciones().isEmpty()) {
             System.out.println("El curso no tiene evaluaciones cargadas.");
@@ -560,13 +533,11 @@ private static void rendirYVerCalificaciones(Alumno alumno) {
         Modulo modulo = modulos.get(0);
         Evaluacion evaluacion = modulo.getEvaluaciones().get(0);
 
-        // Acción POO: Alumno rinde
         System.out.println("\n[SIMULACIÓN] Rindiendo: " + evaluacion.getNombre());
         alumno.rendirEvaluacion(curso, modulo, evaluacion);
         System.out.println("✅ Esperando calificación del docente.");
 
     } else if (opcion.equals("2")) {
-        // Lógica para VER CALIFICACIONES
         if (alumno.getCalificaciones().isEmpty()) {
             System.out.println("Aún no tienes notas registradas.");
         } else {

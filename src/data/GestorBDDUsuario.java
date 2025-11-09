@@ -57,7 +57,7 @@ public Docente guardarDocente(Docente docente) {
         try (ResultSet rs = ps.getGeneratedKeys()) {
             if (rs.next()) {
                 int idGenerado = rs.getInt(1);
-                docente.setId(idGenerado); // ✅ ESTO SINCRONIZA EL OBJETO
+                docente.setId(idGenerado); 
                 System.out.println("Docente guardado (ID: " + idGenerado + ") correctamente en la base de datos.");
             }
         }
@@ -80,8 +80,8 @@ public Docente guardarDocente(Docente docente) {
         ResultSet rs = ps.executeQuery();
 
         if (rs.next()) {
-            String tipo = rs.getString("tipo"); // ✅ Usamos 'tipo'
-            int idUsuario = rs.getInt("idUsuario"); // ✅ Capturamos el ID
+            String tipo = rs.getString("tipo"); 
+            int idUsuario = rs.getInt("idUsuario"); 
 
             if ("ALUMNO".equalsIgnoreCase(tipo)) {
                 Alumno alumno = new Alumno(
@@ -90,7 +90,7 @@ public Docente guardarDocente(Docente docente) {
                         rs.getString("contrasenia"),
                         rs.getDate("fecha_registro")
                 );
-                alumno.setId(idUsuario); // ✅ Sincronizamos
+                alumno.setId(idUsuario); 
                 usuario = alumno;
                 
             } else if ("DOCENTE".equalsIgnoreCase(tipo)) {
@@ -98,9 +98,9 @@ public Docente guardarDocente(Docente docente) {
                         rs.getString("nombre"),
                         rs.getString("email"),
                         rs.getString("contrasenia"),
-                        rs.getString("especialidad") // ✅ Capturamos especialidad
+                        rs.getString("especialidad")
                 );
-                docente.setId(idUsuario); // ✅ Sincronizamos
+                docente.setId(idUsuario); 
                 usuario = docente;
             }
         }
@@ -120,7 +120,7 @@ public Docente guardarDocente(Docente docente) {
             ResultSet rs = ps.executeQuery();
 
         if (rs.next()) {
-            // Creamos explícitamente un ALUMNO
+            
             Alumno alumno = new Alumno(
 
                 rs.getString("nombre"),
@@ -201,7 +201,7 @@ public Docente buscarDocentePorEmail(String email) {
                     rs.getString("contrasenia"),
                     rs.getString("especialidad")
             );
-            // ✅ CLAVE: Asignar el ID de la base de datos al objeto Java
+          
             docente.setId(rs.getInt("idUsuario")); 
             return docente;
         }
@@ -214,14 +214,13 @@ public Docente buscarDocentePorEmail(String email) {
 public Alumno buscarAlumnoPorId(int id) {
     String sql = "SELECT idUsuario, nombre, email, contrasenia, fecha_registro FROM usuario WHERE idUsuario = ? AND tipo = 'ALUMNO'";
 
-    // Usamos las credenciales y URL definidas en tu clase
     try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD); 
          PreparedStatement ps = conn.prepareStatement(sql)) {
 
         ps.setInt(1, id);
         try (ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
-                // 1. Crear el objeto Alumno usando el constructor (asumiendo fecha_registro = fechaInscripcion)
+                
                 Alumno alumno = new Alumno(
                         rs.getString("nombre"),
                         rs.getString("email"),
@@ -229,7 +228,7 @@ public Alumno buscarAlumnoPorId(int id) {
                         rs.getDate("fecha_registro") 
                 );
                 
-                // 2. 💡 CLAVE: Sincronizar el ID de la BDD con el objeto
+                
                 alumno.setId(rs.getInt("idUsuario")); 
                 return alumno;
             }
