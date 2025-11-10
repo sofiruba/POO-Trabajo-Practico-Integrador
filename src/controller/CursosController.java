@@ -14,6 +14,7 @@ import modelos.pago.Recibo;
 import modelos.usuario.Alumno;
 import modelos.usuario.Docente;
 import exception.CupoCompletoException;
+import data.GestorArchivoCursos;
 
 public class CursosController {
 
@@ -29,9 +30,11 @@ public class CursosController {
     private final GestorBDDModulo gestorModulo;
     private final GestorBDDEvaluacion gestorEvaluacion;
     private final GestorBDDCalificacion gestorCalificacion;
+    private final GestorArchivoCursos gestorArchivos;
 
     public CursosController(PagoServicio pagoServicio, UsuariosController usuariosController) {
         this.pagoServicio = pagoServicio;
+        this.gestorArchivos = new GestorArchivoCursos();
         this.usuariosController = usuariosController;
         this.gestorCurso = new GestorBDDCurso();
         this.gestorInscripciones = new GestorBDDInscripcion();
@@ -45,11 +48,17 @@ public class CursosController {
 
         // Cargar cursos desde la base de datos al iniciar
         this.cursos = new ArrayList<>(gestorCurso.buscarTodos());
+        if (this.cursos.isEmpty()) {
+            this.cursos.addAll(gestorArchivos.cargarCursos());
+        }
         
 
         System.out.println("✅ Controladora inicializada. Se cargaron " + cursos.size() + " cursos desde la base.");
     }
 
+    public void guardarDatosEnArchivo() {
+        gestorArchivos.guardarCursos(this.cursos);
+    }
     // --- CREAR CURSO ---
     public Curso crearCurso(Docente docente, String nombre, String desc, int cupo, float precio, String modalidad) {
         Curso cursoExistente = gestorCurso.buscarPorNombre(nombre);
@@ -142,6 +151,14 @@ public Docente crearDocenteEnPlataforma(String nombre, String email, String cont
 
     return docenteConIdBDD;
 }
+
+    public List<String> obtenerNombres(List<Alumno> alumnos) {
+        List<String> nombres = new ArrayList<>();
+        for (Alumno alumno : alumnos) {
+            nombres.add(alumno.getNombre());
+        }
+        return nombres;
+    }
     public Recibo inscribirYPagar(Alumno alumno, Curso curso, float monto, String tipoPago, int cuotas)
             throws CupoCompletoException {
 
@@ -344,6 +361,57 @@ public List<Alumno> obtenerAlumnosInscritos(int idCurso) {
     System.out.println("Cargados " + alumnos.size() + " alumnos inscritos para el curso ID " + idCurso);
     return alumnos;
 }
+    // --- MÉTODOS PARA LA GUI ---
+    
+    public List<Curso> listarCursosDisponibles() {
+        return new ArrayList<>(cursos);
+    }
+    
+    public void preinscribirAlumno(Alumno alumno, Curso curso) throws CupoCompletoException {
+        inscribirAlumno(alumno, curso);
+    }
+    
+    public void procesarPagoYConfirmarInscripcion(Alumno alumno, Curso curso, float monto, String metodoPago, int cuotas) throws CupoCompletoException {
+        inscribirYPagar(alumno, curso, monto, metodoPago, cuotas);
+    }
+    
+    public List<Curso> obtenerCursosInscritosAlumno(Alumno alumno) {
+        cargarCursosInscritos(alumno);
+        return new ArrayList<>(alumno.getCursos());
+    }
+    
+    public List<Curso> obtenerCursosDocente(Docente docente) {
+        List<Curso> cursosDocente = new ArrayList<>();
+        for (Curso curso : cursos) {
+            // Verificar si el curso pertenece al docente
+            Curso cursoBDD = gestorCurso.buscarCursoPorId(curso.getIdCurso());
+            if (cursoBDD != null) {
+                // Aquí deberías tener una forma de verificar el docente del curso
+                // Por ahora retorno todos para testing
+                cursosDocente.add(curso);
+            }
+        }
+        return cursosDocente;
+    }
+    
+    public List<Alumno> obtenerAlumnosInscritosEnCurso(Curso curso) {
+        return obtenerAlumnosInscritos(curso.getIdCurso());
+    }
+    
+    public Curso crearCurso(Curso curso, Docente docente) {
+
+        Curso nuevoCurso = gestorCurso.guardar(curso, docente);
+        if (nuevoCurso != null) {
+            cursos.add(nuevoCurso);
+            return nuevoCurso;
+        }
+        return null;
+    }
+    
+    public void registrarCalificacion(Calificacion calificacion) {
+        gestorCalificacion.guardarCalificacion(calificacion);
+    }
+    
     // --- GETTERS ---
     public List<Alumno> getAlumnos() { return alumnos; }
     public List<Curso> obtenerTodos() {

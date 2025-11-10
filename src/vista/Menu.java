@@ -1,3 +1,4 @@
+package vista;
 import controller.CursosController;
 import controller.UsuariosController;
 import modelos.pago.PagoServicioImp;
@@ -15,7 +16,7 @@ import exception.CupoCompletoException;
 import java.util.Scanner;
 import java.util.List;
 
-public class Prueba {
+public class Menu {
 
     private static Scanner scanner = new Scanner(System.in);
     private static CursosController cursosController;
@@ -105,7 +106,8 @@ private static void menuDocente(Docente docente) {
             System.out.println("2. Agregar Módulo a un Curso"); 
             System.out.println("3. Agregar Evaluación a un Módulo"); 
             System.out.println("4. Ver Mis Cursos");
-            System.out.println("5. Calificar Alumno (Simulación)");
+            System.out.println("5. Calificar Alumno ");
+            System.out.println("6. Crear excel de cursos");
             System.out.println("0. Cerrar Sesión");
             System.out.print("Seleccione una opción: ");
             opcion = scanner.nextLine();
@@ -125,6 +127,9 @@ private static void menuDocente(Docente docente) {
                     break;
                 case "5":
                     simularCalificacion(docente);
+                    break;
+                case "6":
+                    cursosController.guardarDatosEnArchivo();
                     break;
                 case "0":
                     usuariosController.logout(docente);
